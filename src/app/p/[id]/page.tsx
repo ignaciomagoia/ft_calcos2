@@ -1,0 +1,56 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ProductDetail } from "@/components/ProductDetail";
+import { getProductWithCategory } from "@/lib/data";
+
+type Props = {
+  params: { id: string };
+};
+
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: Props): Promise<Metadata> {
+  const product = await getProductWithCategory(params.id);
+  if (!product) {
+    return { title: "Producto no encontrado" };
+  }
+
+  return {
+    title: `${product.name} | EFETE Calcos`,
+    description: `Comprá ${product.name} en EFETE Calcos`,
+  };
+}
+
+export default async function ProductPage({ params }: Props) {
+  const product = await getProductWithCategory(params.id);
+
+  if (!product) {
+    notFound();
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-4">
+        <Link
+          href={product.category ? `/c/${product.category.slug}` : "/"}
+          className="text-sm font-medium text-slate-500 transition hover:text-slate-900"
+        >
+          ← Volver
+        </Link>
+        {product.category && (
+          <Link
+            href={`/c/${product.category.slug}`}
+            className="pill"
+          >
+            {product.category.name}
+          </Link>
+        )}
+      </div>
+
+      <ProductDetail product={product} />
+    </div>
+  );
+}
