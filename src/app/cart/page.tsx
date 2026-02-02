@@ -60,11 +60,11 @@ export default function CartPage() {
                 key={item.id}
                 className="card flex flex-col gap-4 rounded-3xl p-4 sm:flex-row sm:items-center"
               >
-                <div className="h-28 w-full overflow-hidden rounded-2xl bg-slate-100 sm:h-24 sm:w-24">
+                <div className="flex h-28 w-full items-center justify-center rounded-2xl bg-slate-100 sm:h-24 sm:w-24">
                   <img
                     src={item.imageUrl || buildImagePlaceholder(item.name)}
                     alt={item.name}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full max-h-24 object-contain p-2"
                   />
                 </div>
 

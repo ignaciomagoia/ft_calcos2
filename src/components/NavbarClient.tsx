@@ -26,7 +26,6 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
     setIsDrawerOpen(false);
   }, [pathname]);
 
-  const isHome = pathname === "/";
   const toggleDrawer = () => setIsDrawerOpen((prev) => !prev);
 
   return (
@@ -76,18 +75,16 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
             </div>
 
             <div className="flex justify-end">
-              {!isHome && (
-                <Link
-                  href="/cart"
-                  className="relative flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium transition hover:border-slate-300 hover:bg-slate-50"
-                >
-                  <CartIcon />
-                  <span>Carrito</span>
-                  <span className="pill pill--accent text-[var(--color-primary)]">
-                    {itemCount}
-                  </span>
-                </Link>
-              )}
+              <Link
+                href="/cart"
+                className="relative inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium transition hover:border-slate-300 hover:bg-slate-50"
+              >
+                <CartIcon />
+                <span>Carrito</span>
+                <span className="pill pill--accent text-[var(--color-primary)]">
+                  {itemCount}
+                </span>
+              </Link>
             </div>
           </div>
         </div>
