@@ -1,23 +1,17 @@
 "use client";
 
-import { useMemo } from "react";
 import { usePathname } from "next/navigation";
+
+const WHATSAPP_NUMBER = "5493516183951";
+const DEFAULT_MESSAGE = encodeURIComponent(
+  "Hola! Quiero hacer un pedido de calcos"
+);
 
 const WhatsAppFAB = () => {
   const pathname = usePathname();
   const hideOnAdmin = pathname?.startsWith("/admin");
 
-  const href = useMemo(() => {
-    const envPhone =
-      process.env.NEXT_PUBLIC_WHATSAPP_PHONE ||
-      process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ||
-      "";
-    const normalized = envPhone.replace(/[^\d]/g, "");
-    const fallbackPhone = "5491100000000";
-    const phone = normalized.length > 0 ? normalized : fallbackPhone;
-    const text = encodeURIComponent("Hola! Quiero hacer un pedido de calcos");
-    return `https://wa.me/${phone}?text=${text}`;
-  }, []);
+  const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${DEFAULT_MESSAGE}`;
 
   if (hideOnAdmin) {
     return null;
@@ -28,7 +22,11 @@ const WhatsAppFAB = () => {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl shadow-[#25D366]/40 transition hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#128C7E]"
+      style={{
+        bottom: "calc(env(safe-area-inset-bottom, 0px) + 1.5rem)",
+        right: "calc(env(safe-area-inset-right, 0px) + 1.25rem)",
+      }}
+      className="fixed z-20 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/40 transition hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#128C7E]"
       aria-label="Abrir WhatsApp"
     >
       <WhatsAppIcon />
@@ -40,8 +38,8 @@ const WhatsAppIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 32 32"
-    width="24"
-    height="24"
+    width="20"
+    height="20"
     aria-hidden="true"
   >
     <path

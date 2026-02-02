@@ -5,9 +5,6 @@ import Link from "next/link";
 import { useCartStore } from "@/lib/cartStore";
 import { buildImagePlaceholder, formatCurrency } from "@/lib/utils";
 import { buildWhatsAppCheckoutUrl } from "@/lib/whatsapp";
-
-const whatsappNumber =
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "WHATSAPP_NUMBER";
 const transferAlias =
   process.env.NEXT_PUBLIC_TRANSFER_ALIAS ?? "TRANSFER_ALIAS";
 
@@ -26,7 +23,6 @@ export default function CartPage() {
     items,
     total: subtotal,
     transferAlias,
-    whatsappNumber,
   });
 
   return (

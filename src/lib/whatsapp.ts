@@ -1,21 +1,19 @@
 import type { CartItem } from "./cartStore";
 import { formatCurrency } from "./utils";
 
+const WHATSAPP_NUMBER = "5493516183951";
+
 type WhatsAppPayload = {
   items: CartItem[];
   total: number;
   transferAlias: string;
-  whatsappNumber: string;
 };
 
 export const buildWhatsAppCheckoutUrl = ({
   items,
   total,
   transferAlias,
-  whatsappNumber,
 }: WhatsAppPayload) => {
-  const number =
-    whatsappNumber.replace(/[^0-9]/g, "") || "WHATSAPP_NUMBER".toUpperCase();
   const alias = transferAlias || "TRANSFER_ALIAS";
 
   const lines = [
@@ -33,5 +31,5 @@ export const buildWhatsAppCheckoutUrl = ({
   ];
 
   const message = encodeURIComponent(lines.join("\n"));
-  return `https://wa.me/${number}?text=${message}`;
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
 };
