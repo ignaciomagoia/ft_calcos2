@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import type { Category, Product } from "@/lib/types";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, slugify } from "@/lib/utils";
 
 type Props = {
   initialCategories: Category[];
@@ -13,7 +13,6 @@ type Props = {
 type CategoryFormState = {
   id?: string;
   name: string;
-  slug: string;
   sort_order: string;
 };
 
@@ -29,7 +28,6 @@ type ProductFormState = {
 
 const emptyCategoryForm: CategoryFormState = {
   name: "",
-  slug: "",
   sort_order: "0",
 };
 
@@ -39,6 +37,7 @@ const createEmptyProductForm = (categoryId?: string): ProductFormState => ({
   category_id: categoryId ?? "",
   image_url: "",
   active: true,
+  file: null,
 });
 
 export const AdminDashboard = ({
@@ -60,16 +59,57 @@ export const AdminDashboard = ({
   const [productMessage, setProductMessage] = useState<string | null>(null);
   const [productError, setProductError] = useState<string | null>(null);
 
-  const handleCategorySubmit = async (
-    event: FormEvent<HTMLFormElement>
-  ) => {
+  const ensureUniqueCategorySlug = async (name: string, id?: string) => {
+    const base = slugify(name) || "categoria";
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, slug")
+      .ilike("slug", `${base}%`);
+
+    if (error || !data) {
+      console.error("Error validating slug", error);
+      return base;
+    }
+
+    const existing = data
+      .filter((category) => category.id !== id)
+      .map((category) => category.slug);
+
+    if (!existing.includes(base)) {
+      return base;
+    }
+
+    let counter = 2;
+    let candidate = `${base}-${counter}`;
+
+    while (existing.includes(candidate)) {
+      counter += 1;
+      candidate = `${base}-${counter}`;
+    }
+
+    return candidate;
+  };
+
+  const handleCategorySubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setCategoryLoading(true);
     setCategoryMessage(null);
 
+    const trimmedName = categoryForm.name.trim();
+    if (!trimmedName) {
+      setCategoryMessage("Ingresá un nombre válido.");
+      setCategoryLoading(false);
+      return;
+    }
+
+    const slug = await ensureUniqueCategorySlug(
+      trimmedName,
+      categoryForm.id
+    );
+
     const payload = {
-      name: categoryForm.name,
-      slug: categoryForm.slug,
+      name: trimmedName,
+      slug,
       sort_order: Number(categoryForm.sort_order ?? 0),
     };
 
@@ -104,7 +144,6 @@ export const AdminDashboard = ({
     setCategoryForm({
       id: category.id,
       name: category.name,
-      slug: category.slug,
       sort_order: String(category.sort_order ?? 0),
     });
   };
@@ -138,6 +177,12 @@ export const AdminDashboard = ({
 
     let imageUrl = productForm.image_url;
 
+    if (!imageUrl && !productForm.file) {
+      setProductError("Subí una imagen del producto.");
+      setProductLoading(false);
+      return;
+    }
+
     if (productForm.file) {
       const fileExt = productForm.file.name.split(".").pop() ?? "jpg";
       const path = `uploads/${crypto.randomUUID()}.${fileExt}`;
@@ -155,7 +200,19 @@ export const AdminDashboard = ({
       }
 
       const { data } = supabase.storage.from("products").getPublicUrl(path);
-      imageUrl = data.publicUrl;
+      const uploadedUrl = data.publicUrl;
+      imageUrl = uploadedUrl;
+      setProductForm((prev) => ({
+        ...prev,
+        image_url: uploadedUrl,
+        file: null,
+      }));
+    }
+
+    if (!imageUrl) {
+      setProductError("No se pudo obtener la URL de la imagen.");
+      setProductLoading(false);
+      return;
     }
 
     const payload = {
@@ -199,6 +256,7 @@ export const AdminDashboard = ({
       category_id: product.category_id,
       image_url: product.image_url ?? "",
       active: product.active,
+      file: null,
     });
     setProductMessage(null);
   };
@@ -274,19 +332,6 @@ export const AdminDashboard = ({
                 setCategoryForm((prev) => ({
                   ...prev,
                   name: event.target.value,
-                }))
-              }
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
-            />
-            <input
-              type="text"
-              required
-              placeholder="Slug (sin espacios)"
-              value={categoryForm.slug}
-              onChange={(event) =>
-                setCategoryForm((prev) => ({
-                  ...prev,
-                  slug: event.target.value,
                 }))
               }
               className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
@@ -412,18 +457,6 @@ export const AdminDashboard = ({
                 </option>
               ))}
             </select>
-            <input
-              type="url"
-              placeholder="URL de imagen"
-              value={productForm.image_url}
-              onChange={(event) =>
-                setProductForm((prev) => ({
-                  ...prev,
-                  image_url: event.target.value,
-                }))
-              }
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
-            />
             <label className="text-sm font-medium text-slate-600">
               Subir imagen al bucket
               <input

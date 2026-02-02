@@ -8,6 +8,7 @@
   --color-primary: #0122a1;
   --color-primary-dark: #011a7a;
   --color-secondary: #8f8df2;
+  --color-secondary-light: rgba(143, 141, 242, 0.12);
   --color-accent: #dcf343;
   --color-white: #ffffff;
 }

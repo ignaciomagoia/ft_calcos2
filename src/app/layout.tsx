@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import WhatsAppFAB from "@/components/WhatsAppFAB";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,13 +42,14 @@ export default function RootLayout({
             </div>
           </main>
           <footer className="border-t border-slate-200 bg-white">
-            <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-              <span>© {new Date().getFullYear()} EFETE Calcos. Todos los derechos reservados.</span>
-              <span>Hecho con Next.js + Supabase.</span>
+            <div className="mx-auto flex max-w-6xl justify-center px-4 py-6 text-center text-sm text-slate-500">
+              <span>© 2026 EFETE Calcos. Todos los derechos reservados.</span>
             </div>
           </footer>
         </div>
+        <WhatsAppFAB />
       </body>
     </html>
   );
 }
+
