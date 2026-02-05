@@ -31,13 +31,13 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70">
-        <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-1.5 sm:px-6 sm:py-4 lg:px-8">
+        <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-1 sm:px-6 sm:py-4 lg:px-8">
           <div className="grid w-full grid-cols-[auto,1fr,auto] items-center gap-2 sm:gap-4">
-            <div className="flex items-center justify-start">
+            <div className="flex items-center justify-start justify-self-start">
               <button
                 type="button"
                 onClick={toggleDrawer}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 sm:h-11 sm:w-11"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 sm:h-11 sm:w-11"
                 aria-label="Abrir menú"
                 aria-expanded={isDrawerOpen}
               >
@@ -58,8 +58,11 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
               </button>
             </div>
 
-            <div className="flex min-w-0 items-center justify-center">
-              <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <div className="flex min-w-0 items-center justify-center justify-self-center">
+              <Link
+                href="/"
+                className="flex h-9 min-w-0 items-center gap-2 sm:h-auto sm:gap-3"
+              >
                 <Image
                   src="/imagenvariante.png"
                   alt="EFETE Calcos"
@@ -74,10 +77,10 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
               </Link>
             </div>
 
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-end justify-self-end">
               <Link
                 href="/cart"
-                className="relative inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-2 py-1 text-[11px] font-medium leading-none transition hover:border-slate-300 hover:bg-slate-50 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
+                className="relative inline-flex h-9 items-center gap-1.5 rounded-full border border-slate-200 px-2 text-[11px] font-medium leading-none transition hover:border-slate-300 hover:bg-slate-50 sm:h-auto sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
               >
                 <CartIcon />
                 <span className="sr-only sm:not-sr-only">Carrito</span>
@@ -109,6 +112,7 @@ const CartIcon = () => (
     strokeWidth="1.8"
     strokeLinecap="round"
     strokeLinejoin="round"
+    className="h-4 w-4 sm:h-[18px] sm:w-[18px]"
   >
     <circle cx="9" cy="21" r="1" />
     <circle cx="20" cy="21" r="1" />

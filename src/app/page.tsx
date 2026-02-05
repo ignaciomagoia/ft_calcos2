@@ -12,7 +12,7 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-0 -mx-4 sm:-mx-6 lg:-mx-8">
-      <section className="relative -mt-6 isolate overflow-hidden rounded-none border-x-0 border-y border-slate-200 bg-white shadow-2xl sm:mt-0 sm:rounded-[32px] sm:border">
+      <section className="relative -mt-6 isolate overflow-hidden rounded-none border-b border-slate-200 bg-white shadow-none sm:mt-0 sm:rounded-[32px] sm:border sm:shadow-2xl">
         <div className="grid min-h-0 grid-cols-2 lg:min-h-[560px] lg:grid-cols-2">
           <div className="relative flex flex-col justify-start gap-6 bg-[var(--color-primary)] px-6 py-6 text-white sm:px-10 sm:py-12 lg:justify-between lg:gap-10">
             <Sparkle className="pointer-events-none absolute bottom-16 right-8 hidden rotate-12 text-white/40 sm:block" />
@@ -33,13 +33,13 @@ export default async function HomePage() {
             <div className="flex flex-col gap-3 text-sm font-semibold sm:flex-row">
               <Link
                 href="#catalogo"
-                className="inline-flex w-full items-center justify-center rounded-full bg-[var(--color-accent)] px-6 py-3 text-[var(--color-primary)] transition hover:-translate-y-0.5 sm:w-auto sm:px-8"
+                className="inline-flex items-center justify-center rounded-full bg-[var(--color-accent)] px-8 py-3 text-[var(--color-primary)] transition hover:-translate-y-0.5"
               >
                 Ver catálogo
               </Link>
               <Link
                 href="/cart"
-                className="inline-flex w-full items-center justify-center rounded-full border border-white/40 px-6 py-3 text-white transition hover:-translate-y-0.5 hover:bg-white/10 sm:w-auto sm:px-8"
+                className="inline-flex items-center justify-center rounded-full border border-white/40 px-8 py-3 text-white transition hover:-translate-y-0.5 hover:bg-white/10"
               >
                 Ir al carrito
               </Link>
