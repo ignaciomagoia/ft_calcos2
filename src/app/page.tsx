@@ -57,7 +57,7 @@ export default async function HomePage() {
                 fill
                 sizes="(min-width: 1024px) 50vw, 50vw"
                 priority
-                className="object-cover"
+                className="object-cover lg:object-contain"
               />
             </div>
           </div>

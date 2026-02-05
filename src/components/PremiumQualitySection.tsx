@@ -37,7 +37,7 @@ const PremiumQualitySection = () => {
           href="https://www.instagram.com/reel/C0htV7hv1Q2/?igsh=MWoyZmtlY3V3M25uaA=="
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-7 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5"
+          className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-7 py-2.5 !text-white text-sm font-semibold shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
         >
           Ver pruebas
         </a>
