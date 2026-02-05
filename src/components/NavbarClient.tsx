@@ -31,13 +31,13 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70">
-        <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
-          <div className="grid w-full grid-cols-[auto,1fr,auto] items-center gap-3 sm:gap-4">
+        <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-2 sm:px-6 sm:py-4 lg:px-8">
+          <div className="grid w-full grid-cols-[auto,1fr,auto] items-center gap-2 sm:gap-4">
             <div className="flex justify-start">
               <button
                 type="button"
                 onClick={toggleDrawer}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 sm:h-11 sm:w-11"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 sm:h-11 sm:w-11"
                 aria-label="Abrir menú"
                 aria-expanded={isDrawerOpen}
               >
@@ -65,10 +65,10 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
                   alt="EFETE Calcos"
                   width={36}
                   height={36}
-                  className="h-8 w-8 rounded-full object-contain sm:h-9 sm:w-9"
+                  className="h-7 w-7 rounded-full object-contain sm:h-9 sm:w-9"
                   priority
                 />
-                <span className="text-sm font-semibold tracking-tight text-slate-900 sm:text-lg">
+                <span className="max-w-[150px] truncate text-xs font-semibold tracking-tight text-slate-900 sm:max-w-none sm:text-lg">
                   EFETE CALCOS
                 </span>
               </Link>
@@ -77,7 +77,7 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
             <div className="flex justify-end">
               <Link
                 href="/cart"
-                className="relative inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-2.5 py-1.5 text-xs font-medium transition hover:border-slate-300 hover:bg-slate-50 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
+                className="relative inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-2 py-1 text-xs font-medium transition hover:border-slate-300 hover:bg-slate-50 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
               >
                 <CartIcon />
                 <span className="sr-only sm:not-sr-only">Carrito</span>
