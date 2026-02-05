@@ -18,35 +18,53 @@ export default async function HomePage() {
             <Sparkle className="pointer-events-none absolute bottom-16 right-8 hidden rotate-12 text-white/40 sm:block" />
 
             <div className="space-y-6">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
-                FT CALCOS
-              </span>
-              <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
-                Pegá tu estilo.
-              </h1>
-              <p className="text-base text-white/90 sm:text-lg">
-                Calcos premium, resistentes y con envíos en 24hs. Curá tu
-                catálogo y coordiná todo por WhatsApp.
-              </p>
-            </div>
+              <div className="grid grid-cols-[1fr_auto] items-start gap-4 lg:block">
+                <div className="space-y-6">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
+                    FT CALCOS
+                  </span>
+                  <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
+                    Pegá tu estilo.
+                  </h1>
+                  <p className="text-base text-white/90 sm:text-lg">
+                    Calcos premium, resistentes y con envíos en 24hs. Curá tu
+                    catálogo y coordiná todo por WhatsApp.
+                  </p>
+                </div>
 
-            <div className="flex flex-col gap-3 text-sm font-semibold sm:flex-row">
-              <Link
-                href="#catalogo"
-                className="inline-flex items-center justify-center rounded-full bg-[var(--color-accent)] px-8 py-3 text-[var(--color-primary)] transition hover:-translate-y-0.5"
-              >
-                Ver catálogo
-              </Link>
-              <Link
-                href="/cart"
-                className="inline-flex items-center justify-center rounded-full border border-white/40 px-8 py-3 text-white transition hover:-translate-y-0.5 hover:bg-white/10"
-              >
-                Ir al carrito
-              </Link>
+                <div className="flex justify-center lg:hidden">
+                  <div className="relative w-[150px] overflow-hidden rounded-[24px] border border-white/50 bg-gradient-to-br from-[var(--color-secondary)]/15 via-white to-white shadow-xl sm:w-[180px]">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-[var(--color-secondary)]/30 to-transparent" />
+                    <Image
+                      src="/imagendetermo.webp"
+                      alt="Placeholder de producto FT Calcos, reemplazar con imagen real"
+                      width={360}
+                      height={420}
+                      priority
+                      className="relative h-auto w-full max-h-[180px] object-contain sm:max-h-[200px]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 text-sm font-semibold sm:flex-row">
+                <Link
+                  href="#catalogo"
+                  className="inline-flex items-center justify-center rounded-full bg-[var(--color-accent)] px-8 py-3 text-[var(--color-primary)] transition hover:-translate-y-0.5"
+                >
+                  Ver catálogo
+                </Link>
+                <Link
+                  href="/cart"
+                  className="inline-flex items-center justify-center rounded-full border border-white/40 px-8 py-3 text-white transition hover:-translate-y-0.5 hover:bg-white/10"
+                >
+                  Ir al carrito
+                </Link>
+              </div>
             </div>
           </div>
 
-          <div className="relative flex items-center justify-center px-4 py-6 sm:px-10 sm:py-8">
+          <div className="relative hidden items-center justify-center px-4 py-6 sm:px-10 sm:py-8 lg:flex">
             <div className="relative w-full max-w-[360px] overflow-hidden rounded-[32px] border border-white/60 bg-gradient-to-br from-[var(--color-secondary)]/15 via-white to-white shadow-2xl sm:max-w-md">
               <div className="absolute inset-0 bg-gradient-to-tr from-[var(--color-secondary)]/30 to-transparent" />
               <Image
