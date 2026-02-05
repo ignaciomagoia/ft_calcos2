@@ -12,7 +12,7 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-0 -mx-4 sm:-mx-6 lg:-mx-8">
-      <section className="relative isolate overflow-hidden rounded-none border-x-0 border-y border-slate-200 bg-white shadow-2xl sm:rounded-[32px] sm:border">
+      <section className="relative -mt-6 isolate overflow-hidden rounded-none border-x-0 border-y border-slate-200 bg-white shadow-2xl sm:mt-0 sm:rounded-[32px] sm:border">
         <div className="grid min-h-0 grid-cols-2 lg:min-h-[560px] lg:grid-cols-2">
           <div className="relative flex flex-col justify-start gap-6 bg-[var(--color-primary)] px-6 py-6 text-white sm:px-10 sm:py-12 lg:justify-between lg:gap-10">
             <Sparkle className="pointer-events-none absolute bottom-16 right-8 hidden rotate-12 text-white/40 sm:block" />
@@ -33,13 +33,13 @@ export default async function HomePage() {
             <div className="flex flex-col gap-3 text-sm font-semibold sm:flex-row">
               <Link
                 href="#catalogo"
-                className="inline-flex items-center justify-center rounded-full bg-[var(--color-accent)] px-8 py-3 text-[var(--color-primary)] transition hover:-translate-y-0.5"
+                className="inline-flex w-full items-center justify-center rounded-full bg-[var(--color-accent)] px-6 py-3 text-[var(--color-primary)] transition hover:-translate-y-0.5 sm:w-auto sm:px-8"
               >
                 Ver catálogo
               </Link>
               <Link
                 href="/cart"
-                className="inline-flex items-center justify-center rounded-full border border-white/40 px-8 py-3 text-white transition hover:-translate-y-0.5 hover:bg-white/10"
+                className="inline-flex w-full items-center justify-center rounded-full border border-white/40 px-6 py-3 text-white transition hover:-translate-y-0.5 hover:bg-white/10 sm:w-auto sm:px-8"
               >
                 Ir al carrito
               </Link>
@@ -47,15 +47,15 @@ export default async function HomePage() {
           </div>
 
           <div className="relative flex items-stretch justify-stretch bg-[var(--color-primary)] px-0 py-0 lg:px-4 lg:py-6">
-            <div className="relative h-full w-full overflow-hidden rounded-none border-l border-white/20 bg-gradient-to-br from-[var(--color-secondary)]/15 via-white to-white shadow-none lg:rounded-[32px] lg:border lg:border-white/60 lg:shadow-2xl">
+            <div className="relative h-full w-full min-h-[320px] overflow-hidden rounded-none border-l border-white/20 bg-gradient-to-br from-[var(--color-secondary)]/15 via-white to-white shadow-none lg:min-h-0 lg:rounded-[32px] lg:border lg:border-white/60 lg:shadow-2xl">
               <div className="absolute inset-0 bg-gradient-to-tr from-[var(--color-secondary)]/30 to-transparent" />
               <Image
                 src="/imagendetermo.webp"
                 alt="Placeholder de producto FT Calcos, reemplazar con imagen real"
-                width={720}
-                height={900}
+                fill
+                sizes="(min-width: 1024px) 50vw, 50vw"
                 priority
-                className="relative h-full w-full object-cover"
+                className="object-cover"
               />
               <div className="pointer-events-none absolute bottom-6 left-6 rounded-full bg-white/80 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-700">
                 Próxima colección
