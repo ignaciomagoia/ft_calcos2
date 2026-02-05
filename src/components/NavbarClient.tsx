@@ -31,9 +31,9 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70">
-        <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-1 sm:px-6 sm:py-4 lg:px-8">
-          <div className="grid w-full grid-cols-[auto,1fr,auto] items-center gap-2 sm:gap-4">
-            <div className="flex items-center justify-start justify-self-start">
+        <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-2 sm:px-6 sm:py-4 lg:px-8">
+          <div className="flex w-full items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={toggleDrawer}
@@ -56,13 +56,8 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
                   <line x1="4" y1="17" x2="20" y2="17" />
                 </svg>
               </button>
-            </div>
 
-            <div className="flex min-w-0 items-center justify-center justify-self-center">
-              <Link
-                href="/"
-                className="flex h-9 min-w-0 items-center gap-2 sm:h-auto sm:gap-3"
-              >
+              <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <Image
                   src="/imagenvariante.png"
                   alt="EFETE Calcos"
@@ -77,18 +72,16 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
               </Link>
             </div>
 
-            <div className="flex items-center justify-end justify-self-end">
-              <Link
-                href="/cart"
-                className="relative inline-flex h-9 items-center gap-1.5 rounded-full border border-slate-200 px-2 text-[11px] font-medium leading-none transition hover:border-slate-300 hover:bg-slate-50 sm:h-auto sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
-              >
-                <CartIcon />
-                <span className="sr-only sm:not-sr-only">Carrito</span>
-                <span className="pill pill--accent px-2 py-0.5 text-[10px] text-[var(--color-primary)] sm:px-3 sm:py-1 sm:text-xs">
-                  {itemCount}
-                </span>
-              </Link>
-            </div>
+            <Link
+              href="/cart"
+              className="relative inline-flex h-9 items-center gap-1.5 rounded-full border border-slate-200 px-2 text-[11px] font-medium leading-none transition hover:border-slate-300 hover:bg-slate-50 sm:h-auto sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
+            >
+              <CartIcon />
+              <span className="sr-only sm:not-sr-only">Carrito</span>
+              <span className="pill pill--accent px-2 py-0.5 text-[10px] text-[var(--color-primary)] sm:px-3 sm:py-1 sm:text-xs">
+                {itemCount}
+              </span>
+            </Link>
           </div>
         </div>
       </header>
