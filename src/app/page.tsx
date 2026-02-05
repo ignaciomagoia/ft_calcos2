@@ -4,6 +4,8 @@ import { getCategories } from "@/lib/data";
 import PersonalizedSection from "@/components/PersonalizedSection";
 import WholesalePersonalizedSection from "@/components/WholesalePersonalizedSection";
 import HowToPersonalized from "@/components/HowToPersonalized";
+import SizesSection from "@/components/SizesSection";
+import PremiumQualitySection from "@/components/PremiumQualitySection";
 
 export const dynamic = "force-dynamic";
 
@@ -102,6 +104,8 @@ export default async function HomePage() {
       <div className="space-y-0">
         <PersonalizedSection />
         <WholesalePersonalizedSection />
+        <SizesSection />
+        <PremiumQualitySection />
         <HowToPersonalized />
       </div>
     </div>
