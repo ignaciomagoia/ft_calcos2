@@ -42,8 +42,19 @@ export default function RootLayout({
             </div>
           </main>
           <footer className="border-t border-slate-200 bg-white">
-            <div className="mx-auto flex max-w-6xl justify-center px-4 py-6 text-center text-sm text-slate-500">
-              <span>© 2026 EFETE Calcos. Todos los derechos reservados.</span>
+            <div className="mx-auto flex max-w-6xl flex-col items-center gap-1 px-4 py-6 text-center text-sm text-slate-500">
+              <span>© 2026 EFETE Calcos</span>
+              <span className="text-xs text-slate-500/80">
+                Desarrollado por{" "}
+                <a
+                  href="https://instagram.com/nacho.magoia"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)]"
+                >
+                  @nacho.magoia
+                </a>
+              </span>
             </div>
           </footer>
         </div>
