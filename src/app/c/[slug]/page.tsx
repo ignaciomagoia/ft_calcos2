@@ -33,7 +33,8 @@ export default async function CategoryPage({ params }: Props) {
   const products = await getProductsByCategoryId(category.id);
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+      <div className="space-y-8">
       <Link
         href="/"
         className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
@@ -60,6 +61,7 @@ export default async function CategoryPage({ params }: Props) {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -6,8 +6,8 @@ const badges = [
 
 const PremiumQualitySection = () => {
   return (
-    <section className="w-full bg-[var(--color-secondary)]/15 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl space-y-6 text-center">
+    <section className="w-full bg-[var(--color-secondary)]/15 py-12">
+      <div className="mx-auto w-full max-w-6xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
         <div className="space-y-3">
           <p className="pill mx-auto w-fit bg-[var(--color-secondary)] text-white">
             Calidad

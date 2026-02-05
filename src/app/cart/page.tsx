@@ -26,7 +26,8 @@ export default function CartPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+      <div className="space-y-6">
       <Link
         href="/"
         className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
@@ -155,6 +156,7 @@ export default function CartPage() {
           </aside>
         </div>
       )}
+      </div>
     </div>
   );
 }

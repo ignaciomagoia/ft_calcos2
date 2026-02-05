@@ -13,7 +13,7 @@ export default async function HomePage() {
   const categories = await getCategories();
 
   return (
-    <div className="space-y-0 -mx-4 sm:-mx-6 lg:-mx-8">
+    <div className="space-y-0">
       <section className="relative -mt-6 isolate overflow-hidden rounded-none border-b border-slate-200 bg-white shadow-none sm:mt-0 sm:rounded-[32px] sm:border sm:shadow-2xl">
         <div className="grid min-h-0 grid-cols-2 lg:min-h-[560px] lg:grid-cols-2">
           <div className="relative flex flex-col justify-start gap-6 bg-[var(--color-primary)] px-6 py-6 text-white sm:px-10 sm:py-12 lg:justify-between lg:gap-10">
@@ -64,8 +64,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section id="catalogo" className="space-y-6 px-4 pt-8 pb-6 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-2">
+      <section id="catalogo" className="w-full bg-white py-8">
+        <div className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-2">
           <p className="pill">Catálogo</p>
           <h2 className="text-3xl font-semibold">Elegí tu categoría</h2>
           <p className="text-slate-600">
@@ -99,6 +100,7 @@ export default async function HomePage() {
             ))}
           </div>
         )}
+        </div>
       </section>
 
       <div className="space-y-0">

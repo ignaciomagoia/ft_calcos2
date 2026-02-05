@@ -6,8 +6,8 @@ const sizes = [
 
 const SizesSection = () => {
   return (
-    <section className="w-full bg-white px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl space-y-8">
+    <section className="w-full bg-white py-12">
+      <div className="mx-auto w-full max-w-6xl space-y-8 px-4 sm:px-6 lg:px-8">
         <div className="space-y-3">
           <p className="pill w-fit">Tamaños</p>
           <h2 className="text-3xl font-semibold text-slate-900">

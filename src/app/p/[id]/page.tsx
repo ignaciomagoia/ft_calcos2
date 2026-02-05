@@ -32,7 +32,8 @@ export default async function ProductPage({ params }: Props) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+      <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-4">
         <Link
           href={product.category ? `/c/${product.category.slug}` : "/"}
@@ -51,6 +52,7 @@ export default async function ProductPage({ params }: Props) {
       </div>
 
       <ProductDetail product={product} />
+      </div>
     </div>
   );
 }
