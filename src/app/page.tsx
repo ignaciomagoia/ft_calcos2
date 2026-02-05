@@ -11,20 +11,20 @@ export default async function HomePage() {
   const categories = await getCategories();
 
   return (
-    <div className="space-y-16">
-      <section className="relative isolate overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-2xl">
-        <div className="grid min-h-[560px] grid-cols-1 lg:grid-cols-2">
-          <div className="relative flex flex-col justify-start gap-8 bg-[var(--color-primary)] px-6 py-12 text-white sm:px-10 lg:justify-between lg:gap-10">
+    <div className="space-y-0 -mx-4 sm:-mx-6 lg:-mx-8">
+      <section className="relative isolate overflow-hidden rounded-none border-x-0 border-y border-slate-200 bg-white shadow-2xl sm:rounded-[32px] sm:border">
+        <div className="grid min-h-0 grid-cols-1 lg:min-h-[560px] lg:grid-cols-2">
+          <div className="relative flex flex-col justify-start gap-6 bg-[var(--color-primary)] px-6 py-8 text-white sm:px-10 sm:py-12 lg:justify-between lg:gap-10">
             <Sparkle className="pointer-events-none absolute bottom-16 right-8 hidden rotate-12 text-white/40 sm:block" />
 
             <div className="space-y-6">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
                 FT CALCOS
               </span>
-              <h1 className="text-5xl font-semibold leading-tight tracking-tight sm:text-6xl">
+              <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
                 Pegá tu estilo.
               </h1>
-              <p className="text-lg text-white/90">
+              <p className="text-base text-white/90 sm:text-lg">
                 Calcos premium, resistentes y con envíos en 24hs. Curá tu
                 catálogo y coordiná todo por WhatsApp.
               </p>
@@ -46,7 +46,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="relative flex items-center justify-center px-4 py-8 sm:px-10">
+          <div className="relative flex items-center justify-center px-4 py-6 sm:px-10 sm:py-8">
             <div className="relative w-full max-w-[360px] overflow-hidden rounded-[32px] border border-white/60 bg-gradient-to-br from-[var(--color-secondary)]/15 via-white to-white shadow-2xl sm:max-w-md">
               <div className="absolute inset-0 bg-gradient-to-tr from-[var(--color-secondary)]/30 to-transparent" />
               <Image
@@ -65,7 +65,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section id="catalogo" className="space-y-6">
+      <section id="catalogo" className="space-y-6 px-4 pt-8 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-2">
           <p className="pill">Catálogo</p>
           <h2 className="text-3xl font-semibold">Elegí tu categoría</h2>
@@ -102,7 +102,7 @@ export default async function HomePage() {
         )}
       </section>
 
-      <div className="space-y-6">
+      <div className="space-y-0">
         <PersonalizedSection />
         <WholesalePersonalizedSection />
         <HowToPersonalized />
