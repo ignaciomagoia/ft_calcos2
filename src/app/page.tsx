@@ -57,15 +57,12 @@ export default async function HomePage() {
                 priority
                 className="object-cover"
               />
-              <div className="pointer-events-none absolute bottom-6 left-6 rounded-full bg-white/80 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-700">
-                Próxima colección
-              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="catalogo" className="space-y-6 px-4 pt-8 sm:px-6 lg:px-8">
+      <section id="catalogo" className="space-y-6 px-4 pt-8 pb-6 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-2">
           <p className="pill">Catálogo</p>
           <h2 className="text-3xl font-semibold">Elegí tu categoría</h2>

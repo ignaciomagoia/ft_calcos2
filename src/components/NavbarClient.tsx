@@ -32,45 +32,46 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
     <>
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70">
         <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-2 sm:px-6 sm:py-4 lg:px-8">
-          <div className="flex w-full items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-              <button
-                type="button"
-                onClick={toggleDrawer}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 sm:h-11 sm:w-11"
-                aria-label="Abrir menú"
-                aria-expanded={isDrawerOpen}
+          <div className="relative flex w-full items-center justify-between">
+            <button
+              type="button"
+              onClick={toggleDrawer}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 sm:h-11 sm:w-11"
+              aria-label="Abrir menú"
+              aria-expanded={isDrawerOpen}
+            >
+              <span className="sr-only">Abrir menú</span>
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
               >
-                <span className="sr-only">Abrir menú</span>
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <line x1="4" y1="7" x2="20" y2="7" />
-                  <line x1="4" y1="12" x2="20" y2="12" />
-                  <line x1="4" y1="17" x2="20" y2="17" />
-                </svg>
-              </button>
+                <line x1="4" y1="7" x2="20" y2="7" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="17" x2="20" y2="17" />
+              </svg>
+            </button>
 
-              <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
-                <Image
-                  src="/imagenvariante.png"
-                  alt="EFETE Calcos"
-                  width={36}
-                  height={36}
-                  className="h-7 w-7 rounded-full object-contain sm:h-9 sm:w-9"
-                  priority
-                />
-                <span className="max-w-[150px] truncate text-xs font-semibold leading-none tracking-tight text-slate-900 sm:max-w-none sm:text-lg">
-                  EFETE CALCOS
-                </span>
-              </Link>
-            </div>
+            <Link
+              href="/"
+              className="absolute left-1/2 top-1/2 flex min-w-0 max-w-[60%] -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 sm:gap-3"
+            >
+              <Image
+                src="/imagenvariante.png"
+                alt="EFETE Calcos"
+                width={36}
+                height={36}
+                className="h-7 w-7 rounded-full object-contain sm:h-9 sm:w-9"
+                priority
+              />
+              <span className="truncate text-xs font-semibold leading-none tracking-tight text-slate-900 sm:text-lg">
+                EFETE CALCOS
+              </span>
+            </Link>
 
             <Link
               href="/cart"
