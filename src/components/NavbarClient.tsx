@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -30,7 +30,7 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
 
   return (
     <>
-      <header className="border-b border-slate-200 bg-white shadow-sm">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70">
         <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-4 sm:px-6 lg:px-8">
           <div className="grid w-full grid-cols-3 items-center">
             <div className="flex justify-start">
@@ -61,7 +61,7 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
             <div className="flex justify-center">
               <Link href="/" className="flex items-center gap-3">
                 <Image
-                  src="/logo-ft.png"
+                  src="/imagenvariante.png"
                   alt="EFETE Calcos"
                   width={36}
                   height={36}
@@ -117,4 +117,3 @@ const CartIcon = () => (
 );
 
 export default NavbarClient;
-

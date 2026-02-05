@@ -1,5 +1,9 @@
-﻿import Link from "next/link";
+import Image from "next/image";
+import Link from "next/link";
 import { getCategories } from "@/lib/data";
+import PersonalizedSection from "@/components/PersonalizedSection";
+import WholesalePersonalizedSection from "@/components/WholesalePersonalizedSection";
+import HowToPersonalized from "@/components/HowToPersonalized";
 
 export const dynamic = "force-dynamic";
 
@@ -7,23 +11,57 @@ export default async function HomePage() {
   const categories = await getCategories();
 
   return (
-    <div className="space-y-12">
-      <section className="card overflow-hidden px-6 py-12 text-center md:px-12">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-6">
-          <p className="pill pill--accent w-fit">Edición limitada</p>
-          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-            Calcos premium listas para pegar donde quieras.
-          </h1>
-          <p className="text-lg text-slate-600">
-            Diseños de alta definición, material resistente y envíos en 24hs.
-            Armá tu carrito y coordinamos por WhatsApp.
-          </p>
-          <Link
-            href="#catalogo"
-            className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-10 py-4 text-lg font-semibold text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)]"
-          >
-            Ver catálogo
-          </Link>
+    <div className="space-y-16">
+      <section className="relative isolate overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-2xl">
+        <div className="grid min-h-[560px] grid-cols-1 lg:grid-cols-2">
+          <div className="relative flex flex-col justify-between gap-10 bg-[var(--color-primary)] px-6 py-12 text-white sm:px-10">
+            <Sparkle className="pointer-events-none absolute bottom-16 right-8 hidden rotate-12 text-white/40 sm:block" />
+
+            <div className="space-y-6">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
+                FT CALCOS
+              </span>
+              <h1 className="text-5xl font-semibold leading-tight tracking-tight sm:text-6xl">
+                Pegá tu estilo.
+              </h1>
+              <p className="text-lg text-white/90">
+                Calcos premium, resistentes y con envíos en 24hs. Curá tu
+                catálogo y coordiná todo por WhatsApp.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 text-sm font-semibold sm:flex-row">
+              <Link
+                href="#catalogo"
+                className="inline-flex items-center justify-center rounded-full bg-[var(--color-accent)] px-8 py-3 text-[var(--color-primary)] transition hover:-translate-y-0.5"
+              >
+                Ver catálogo
+              </Link>
+              <Link
+                href="/cart"
+                className="inline-flex items-center justify-center rounded-full border border-white/40 px-8 py-3 text-white transition hover:-translate-y-0.5 hover:bg-white/10"
+              >
+                Ir al carrito
+              </Link>
+            </div>
+          </div>
+
+          <div className="relative flex items-center justify-center px-4 py-8 sm:px-10">
+            <div className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-white/60 bg-gradient-to-br from-[var(--color-secondary)]/15 via-white to-white shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-tr from-[var(--color-secondary)]/30 to-transparent" />
+              <Image
+                src="/imagendetermo.webp"
+                alt="Placeholder de producto FT Calcos, reemplazar con imagen real"
+                width={720}
+                height={900}
+                priority
+                className="relative h-full w-full object-cover"
+              />
+              <div className="pointer-events-none absolute bottom-6 left-6 rounded-full bg-white/80 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-700">
+                Próxima colección
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -41,7 +79,7 @@ export default async function HomePage() {
             Aún no hay categorías cargadas en Supabase.
           </div>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-5">
             {categories.map((category) => (
               <Link
                 key={category.id}
@@ -63,7 +101,25 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+
+      <div className="space-y-6">
+        <PersonalizedSection />
+        <WholesalePersonalizedSection />
+        <HowToPersonalized />
+      </div>
     </div>
   );
 }
 
+const Sparkle = ({ className = "" }: { className?: string }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 40 40"
+    width="48"
+    height="48"
+    fill="currentColor"
+  >
+    <path d="M20 0c1.2 6.6 6.6 11.8 13.2 13C26.6 14.2 21.4 19.4 20 26c-1.4-6.6-6.6-11.8-13.2-13C13.4 11.8 18.6 6.6 20 0zm0 14c.8 4.1 4.1 7.4 8.2 8.1-4.1.7-7.4 4-8.2 8.1-.8-4.1-4.1-7.4-8.2-8.1 4.1-.7 7.4-4 8.2-8.1z" />
+  </svg>
+);
