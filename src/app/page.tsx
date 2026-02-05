@@ -33,7 +33,7 @@ export default async function HomePage() {
             <div className="flex flex-col gap-3 text-sm font-semibold sm:flex-row">
               <Link
                 href="#catalogo"
-                className="inline-flex items-center justify-center rounded-full bg-[var(--color-accent)] px-8 py-3 text-[var(--color-primary)] transition hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-[var(--color-accent)] px-8 py-3 text-[var(--color-primary)] transition hover:-translate-y-0.5"
               >
                 Ver catálogo
               </Link>
