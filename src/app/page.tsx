@@ -14,7 +14,7 @@ export default async function HomePage() {
     <div className="space-y-16">
       <section className="relative isolate overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-2xl">
         <div className="grid min-h-[560px] grid-cols-1 lg:grid-cols-2">
-          <div className="relative flex flex-col justify-between gap-10 bg-[var(--color-primary)] px-6 py-12 text-white sm:px-10">
+          <div className="relative flex flex-col justify-start gap-8 bg-[var(--color-primary)] px-6 py-12 text-white sm:px-10 lg:justify-between lg:gap-10">
             <Sparkle className="pointer-events-none absolute bottom-16 right-8 hidden rotate-12 text-white/40 sm:block" />
 
             <div className="space-y-6">
@@ -47,7 +47,7 @@ export default async function HomePage() {
           </div>
 
           <div className="relative flex items-center justify-center px-4 py-8 sm:px-10">
-            <div className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-white/60 bg-gradient-to-br from-[var(--color-secondary)]/15 via-white to-white shadow-2xl">
+            <div className="relative w-full max-w-[360px] overflow-hidden rounded-[32px] border border-white/60 bg-gradient-to-br from-[var(--color-secondary)]/15 via-white to-white shadow-2xl sm:max-w-md">
               <div className="absolute inset-0 bg-gradient-to-tr from-[var(--color-secondary)]/30 to-transparent" />
               <Image
                 src="/imagendetermo.webp"
@@ -55,7 +55,7 @@ export default async function HomePage() {
                 width={720}
                 height={900}
                 priority
-                className="relative h-full w-full object-cover"
+                className="relative h-auto w-full max-h-[360px] object-contain sm:max-h-[420px] lg:max-h-none lg:object-cover"
               />
               <div className="pointer-events-none absolute bottom-6 left-6 rounded-full bg-white/80 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-700">
                 Próxima colección

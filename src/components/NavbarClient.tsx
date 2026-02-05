@@ -32,7 +32,7 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
     <>
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70">
         <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-4 sm:px-6 lg:px-8">
-          <div className="grid w-full grid-cols-3 items-center">
+          <div className="grid w-full grid-cols-[auto,1fr,auto] items-center gap-3 sm:gap-4">
             <div className="flex justify-start">
               <button
                 type="button"
@@ -58,8 +58,8 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
               </button>
             </div>
 
-            <div className="flex justify-center">
-              <Link href="/" className="flex items-center gap-3">
+            <div className="flex min-w-0 justify-center">
+              <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <Image
                   src="/imagenvariante.png"
                   alt="EFETE Calcos"
@@ -68,7 +68,7 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
                   className="h-9 w-9 rounded-full object-contain"
                   priority
                 />
-                <span className="text-lg font-semibold tracking-tight text-slate-900">
+                <span className="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
                   EFETE CALCOS
                 </span>
               </Link>
@@ -77,10 +77,10 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
             <div className="flex justify-end">
               <Link
                 href="/cart"
-                className="relative inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium transition hover:border-slate-300 hover:bg-slate-50"
+                className="relative inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-2 text-sm font-medium transition hover:border-slate-300 hover:bg-slate-50 sm:gap-2 sm:px-4"
               >
                 <CartIcon />
-                <span>Carrito</span>
+                <span className="sr-only sm:not-sr-only">Carrito</span>
                 <span className="pill pill--accent text-[var(--color-primary)]">
                   {itemCount}
                 </span>
