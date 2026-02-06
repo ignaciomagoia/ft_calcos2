@@ -1,6 +1,6 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 
-const INSTAGRAM_REEL_URL = "INSTAGRAM_REEL_URL";
+const INSTAGRAM_REEL_URL = "https://www.instagram.com/reel/DMY17AqRFiV/?igsh=ZTJneWtjeWRpeGxt";
 
 const SizesSection = () => {
   return (
@@ -38,3 +38,4 @@ const SizesSection = () => {
 };
 
 export default SizesSection;
+
