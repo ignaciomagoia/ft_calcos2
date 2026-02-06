@@ -32,6 +32,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="bg-slate-50">
+      <head>
+        <meta name="color-scheme" content="light" />
+      </head>
       <body
         className={`${poppins.variable} ${geistMono.variable} antialiased bg-slate-50 text-slate-900`}
       >
