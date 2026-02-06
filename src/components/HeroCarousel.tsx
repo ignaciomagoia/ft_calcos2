@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -25,7 +25,7 @@ const slides: Slide[] = [
     title: "Pegá tu estilo",
     subtitle: "Calcos de vinilo premium super resistentes",
     description:
-      "Calcos premium, resistentes y con envios en 24hs. Cura tu catalogo y coordina todo por WhatsApp.",
+      "Calcos premium, resistentes y con envíos en 24hs. Curá tu catálogo y coordiná todo por WhatsApp.",
     image: "/termoprincipal.png",
     imageAlt: "Producto destacado FT Calcos",
     showCtas: true,
@@ -159,14 +159,14 @@ const HeroCarousel = () => {
                   )}
                 </div>
 
-                <div className="relative flex h-full items-center justify-center px-6 py-8 lg:px-10">
-                  <div className="relative -mt-6 h-[260px] w-full max-w-md overflow-hidden rounded-[28px] bg-white/5 sm:h-[320px] lg:h-[360px] lg:max-w-lg">
+                <div className="relative flex h-full items-start justify-center px-6 pt-8 lg:px-10 lg:pt-10">
+                  <div className="relative -mt-4 h-[340px] w-full max-w-sm sm:-mt-6 sm:h-[380px] sm:max-w-md lg:h-[430px] lg:max-w-lg">
                     <Image
                       src={slide.image}
                       alt={slide.imageAlt}
                       fill
                       sizes="(min-width: 1024px) 45vw, 60vw"
-                      className="rounded-[28px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-hero-in"
+                      className="rounded-[26px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in"
                       priority={index === 0}
                     />
                   </div>
@@ -198,13 +198,13 @@ const HeroCarousel = () => {
                 </div>
 
                 <div className="w-full max-w-4xl">
-                  <div className="relative -mt-2 h-[240px] w-full overflow-hidden rounded-[28px] sm:-mt-4 sm:h-[300px] lg:h-[360px]">
+                  <div className="relative -mt-2 h-[260px] w-full sm:-mt-4 sm:h-[320px] lg:h-[380px]">
                     <Image
                       src={slide.image}
                       alt={slide.imageAlt}
                       fill
                       sizes="(min-width: 1024px) 60vw, 90vw"
-                      className="rounded-[28px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-hero-in"
+                      className="rounded-[26px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in"
                     />
                   </div>
                 </div>
@@ -285,4 +285,5 @@ const ArrowIcon = ({ direction }: { direction: "left" | "right" }) => (
 );
 
 export default HeroCarousel;
+
 
