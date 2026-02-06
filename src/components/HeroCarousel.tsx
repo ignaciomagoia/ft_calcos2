@@ -92,7 +92,7 @@ const HeroCarousel = () => {
   };
 
   return (
-    <section className="relative -mt-6 isolate overflow-hidden rounded-none border-b border-slate-200 bg-white shadow-none sm:mt-0 sm:rounded-[32px] sm:border sm:shadow-2xl">
+    <section className="relative isolate overflow-hidden rounded-none border-b border-slate-200 bg-white shadow-none sm:rounded-[32px] sm:border sm:shadow-2xl">
       <div
         ref={viewportRef}
         className="no-scrollbar flex h-[520px] items-stretch snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-[var(--color-primary)] scroll-smooth sm:h-[560px] lg:h-[600px]"
@@ -166,7 +166,7 @@ const HeroCarousel = () => {
                       alt={slide.imageAlt}
                       fill
                       sizes="(max-width: 1023px) 80vw, 45vw"
-                      className="rounded-[26px] object-cover object-[78%_center] drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in lg:hidden"
+                      className="rounded-[26px] object-cover object-[80%_center] drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in lg:hidden"
                       priority={index === 0}
                     />
                     <Image
@@ -174,7 +174,7 @@ const HeroCarousel = () => {
                       alt={slide.imageAlt}
                       fill
                       sizes="(min-width: 1024px) 45vw, 60vw"
-                      className="hidden rounded-[26px] object-cover object-[78%_center] drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in lg:block"
+                      className="hidden rounded-[26px] object-cover object-[80%_center] drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in lg:block"
                       priority={index === 0}
                     />
                   </div>
