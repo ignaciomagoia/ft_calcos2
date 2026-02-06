@@ -30,7 +30,7 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70">
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70">
         <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-2 sm:px-6 sm:py-4 lg:px-8">
           <div className="relative flex w-full items-center justify-between">
             <button
@@ -58,19 +58,17 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
 
             <Link
               href="/"
-              className="absolute left-1/2 top-1/2 flex min-w-0 max-w-[60%] -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 sm:gap-3"
+              className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
+              aria-label="Inicio"
             >
               <Image
                 src="/imagenvariante.png"
                 alt="EFETE Calcos"
                 width={36}
                 height={36}
-                className="h-7 w-7 rounded-full object-contain sm:h-9 sm:w-9"
+                className="h-8 w-8 rounded-full object-contain sm:h-10 sm:w-10"
                 priority
               />
-              <span className="truncate text-xs font-semibold leading-none tracking-tight text-slate-900 sm:text-lg">
-                EFETE CALCOS
-              </span>
             </Link>
 
             <Link
