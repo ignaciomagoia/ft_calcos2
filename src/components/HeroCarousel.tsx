@@ -162,11 +162,19 @@ const HeroCarousel = () => {
                 <div className="relative flex h-full items-stretch justify-center px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
                   <div className="relative h-full w-full">
                     <Image
-                      src={slide.image}
+                      src="/termoprincipal.png"
+                      alt={slide.imageAlt}
+                      fill
+                      sizes="(max-width: 1023px) 80vw, 45vw"
+                      className="rounded-[26px] object-cover object-right drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in lg:hidden"
+                      priority={index === 0}
+                    />
+                    <Image
+                      src="/personalizadas.png"
                       alt={slide.imageAlt}
                       fill
                       sizes="(min-width: 1024px) 45vw, 60vw"
-                      className="rounded-[26px] object-cover object-top drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in"
+                      className="hidden rounded-[26px] object-cover object-right drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in lg:block"
                       priority={index === 0}
                     />
                   </div>
