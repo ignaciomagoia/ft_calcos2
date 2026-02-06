@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, TouchEvent } from "react";
 
 type Slide = {
   id: string;
@@ -44,6 +44,13 @@ const HeroCarousel = () => {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const slideRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const touchState = useRef({
+    startX: 0,
+    startY: 0,
+    startScrollLeft: 0,
+    locked: false,
+    horizontal: false,
+  });
 
   const totalSlides = slides.length;
 
@@ -88,13 +95,53 @@ const HeroCarousel = () => {
     }
   };
 
+  const onTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const touch = event.touches[0];
+    touchState.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      startScrollLeft: viewport.scrollLeft,
+      locked: false,
+      horizontal: false,
+    };
+  };
+
+  const onTouchMove = (event: TouchEvent<HTMLDivElement>) => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const touch = event.touches[0];
+    const dx = touch.clientX - touchState.current.startX;
+    const dy = touch.clientY - touchState.current.startY;
+
+    if (!touchState.current.locked) {
+      if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
+      touchState.current.locked = true;
+      touchState.current.horizontal = Math.abs(dx) > Math.abs(dy);
+    }
+
+    if (touchState.current.horizontal) {
+      event.preventDefault();
+      viewport.scrollLeft = touchState.current.startScrollLeft - dx;
+    }
+  };
+
+  const onTouchEnd = () => {
+    touchState.current.locked = false;
+    touchState.current.horizontal = false;
+  };
+
   return (
     <section className="relative -mt-6 isolate overflow-hidden rounded-none border-b border-slate-200 bg-white shadow-none sm:mt-0 sm:rounded-[32px] sm:border sm:shadow-2xl">
       <div
         ref={viewportRef}
-        className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto scroll-smooth touch-pan-x"
+        className="no-scrollbar flex h-[520px] snap-x snap-mandatory overflow-x-auto scroll-smooth touch-pan-y sm:h-[560px] lg:h-[600px]"
         tabIndex={0}
         onKeyDown={onKeyDown}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
         role="region"
         aria-roledescription="carousel"
         aria-label="Hero principal"
@@ -105,14 +152,14 @@ const HeroCarousel = () => {
             ref={(el) => {
               slideRefs.current[index] = el;
             }}
-            className="w-full shrink-0 snap-start"
+            className="h-full w-full shrink-0 snap-start"
             role="group"
             aria-roledescription="slide"
             aria-label={`${index + 1} de ${totalSlides}`}
           >
             {slide.layout === "split" ? (
-              <div className="grid min-h-0 grid-cols-2 lg:min-h-[560px] lg:grid-cols-2">
-                <div className="relative flex flex-col justify-start gap-6 bg-[var(--color-primary)] px-6 py-6 text-white sm:px-10 sm:py-12 lg:justify-between lg:gap-10">
+              <div className="grid h-full grid-cols-2">
+                <div className="relative flex h-full flex-col justify-start gap-6 bg-[var(--color-primary)] px-6 py-6 text-white sm:px-10 sm:py-12 lg:justify-between lg:gap-10">
                   <Sparkle className="pointer-events-none absolute bottom-16 right-8 hidden rotate-12 text-white/40 sm:block" />
 
                   <div className="space-y-4">
@@ -154,22 +201,22 @@ const HeroCarousel = () => {
                   </div>
                 </div>
 
-                <div className="relative flex items-stretch justify-stretch bg-[var(--color-primary)] px-0 py-0 lg:px-4 lg:py-6">
-                  <div className="relative h-full w-full min-h-[320px] overflow-hidden rounded-none border-l border-white/20 bg-gradient-to-br from-[var(--color-secondary)]/15 via-white to-white shadow-none lg:min-h-0 lg:rounded-[32px] lg:border lg:border-white/60 lg:shadow-2xl">
+                <div className="relative flex h-full items-stretch justify-stretch bg-[var(--color-primary)] px-0 py-0 lg:px-4 lg:py-6">
+                  <div className="relative h-full w-full overflow-hidden rounded-none border-l border-white/20 bg-gradient-to-br from-[var(--color-secondary)]/15 via-white to-white shadow-none lg:rounded-[32px] lg:border lg:border-white/60 lg:shadow-2xl">
                     <div className="absolute inset-0 bg-gradient-to-tr from-[var(--color-secondary)]/30 to-transparent" />
                     <Image
                       src={slide.image}
                       alt={slide.imageAlt}
                       fill
                       sizes="(min-width: 1024px) 50vw, 50vw"
-                      className="object-cover lg:object-contain"
+                      className="object-contain"
                       priority={index === 0}
                     />
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="flex min-h-[520px] flex-col items-center justify-between gap-8 bg-[var(--color-primary)] px-6 py-8 text-white sm:px-10 sm:py-12 lg:min-h-[560px]">
+              <div className="flex h-full flex-col items-center justify-between gap-8 bg-[var(--color-primary)] px-6 py-8 text-white sm:px-10 sm:py-12">
                 <div className="space-y-4 text-center">
                   <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
                     {slide.badge}
