@@ -43,7 +43,9 @@ export default async function HomePage() {
                   <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
                     Colección
                   </p>
-                  <h3 className="text-2xl font-semibold">{category.name}</h3>
+                  <h3 className="break-words text-2xl font-semibold leading-snug">
+                    {category.name}
+                  </h3>
                 </div>
                 <p className="text-sm text-slate-500">
                   Ver productos y agregar al carrito.

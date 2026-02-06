@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent, TouchEvent } from "react";
+import type { KeyboardEvent } from "react";
 
 type Slide = {
   id: string;
@@ -44,13 +44,6 @@ const HeroCarousel = () => {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const slideRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [activeIndex, setActiveIndex] = useState(0);
-  const touchState = useRef({
-    startX: 0,
-    startY: 0,
-    startScrollLeft: 0,
-    locked: false,
-    horizontal: false,
-  });
 
   const totalSlides = slides.length;
 
@@ -95,53 +88,13 @@ const HeroCarousel = () => {
     }
   };
 
-  const onTouchStart = (event: TouchEvent<HTMLDivElement>) => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    const touch = event.touches[0];
-    touchState.current = {
-      startX: touch.clientX,
-      startY: touch.clientY,
-      startScrollLeft: viewport.scrollLeft,
-      locked: false,
-      horizontal: false,
-    };
-  };
-
-  const onTouchMove = (event: TouchEvent<HTMLDivElement>) => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    const touch = event.touches[0];
-    const dx = touch.clientX - touchState.current.startX;
-    const dy = touch.clientY - touchState.current.startY;
-
-    if (!touchState.current.locked) {
-      if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
-      touchState.current.locked = true;
-      touchState.current.horizontal = Math.abs(dx) > Math.abs(dy);
-    }
-
-    if (touchState.current.horizontal) {
-      event.preventDefault();
-      viewport.scrollLeft = touchState.current.startScrollLeft - dx;
-    }
-  };
-
-  const onTouchEnd = () => {
-    touchState.current.locked = false;
-    touchState.current.horizontal = false;
-  };
-
   return (
     <section className="relative -mt-6 isolate overflow-hidden rounded-none border-b border-slate-200 bg-white shadow-none sm:mt-0 sm:rounded-[32px] sm:border sm:shadow-2xl">
       <div
         ref={viewportRef}
-        className="no-scrollbar flex h-[520px] items-stretch snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-[var(--color-primary)] scroll-smooth touch-pan-y sm:h-[560px] lg:h-[600px]"
+        className="no-scrollbar flex h-[520px] items-stretch snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-[var(--color-primary)] scroll-smooth sm:h-[560px] lg:h-[600px]"
         tabIndex={0}
         onKeyDown={onKeyDown}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
         role="region"
         aria-roledescription="carousel"
         aria-label="Hero principal"
@@ -285,7 +238,7 @@ const HeroCarousel = () => {
         </button>
       </div>
 
-      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 lg:bottom-6">
+      <div className="absolute bottom-4 left-1/2 hidden -translate-x-1/2 gap-2 sm:flex lg:bottom-6">
         {slides.map((slide, index) => (
           <button
             key={slide.id}
