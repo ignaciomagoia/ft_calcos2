@@ -166,7 +166,7 @@ const HeroCarousel = () => {
                       alt={slide.imageAlt}
                       fill
                       sizes="(max-width: 1023px) 80vw, 45vw"
-                      className="rounded-[26px] object-cover object-[65%_center] drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in lg:hidden"
+                      className="rounded-[26px] object-cover object-[72%_center] drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in lg:hidden"
                       priority={index === 0}
                     />
                     <Image
@@ -174,7 +174,7 @@ const HeroCarousel = () => {
                       alt={slide.imageAlt}
                       fill
                       sizes="(min-width: 1024px) 45vw, 60vw"
-                      className="hidden rounded-[26px] object-cover object-[65%_center] drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in lg:block"
+                      className="hidden rounded-[26px] object-cover object-[72%_center] drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in lg:block"
                       priority={index === 0}
                     />
                   </div>
