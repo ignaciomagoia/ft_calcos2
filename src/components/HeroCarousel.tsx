@@ -136,7 +136,7 @@ const HeroCarousel = () => {
     <section className="relative -mt-6 isolate overflow-hidden rounded-none border-b border-slate-200 bg-white shadow-none sm:mt-0 sm:rounded-[32px] sm:border sm:shadow-2xl">
       <div
         ref={viewportRef}
-        className="no-scrollbar flex h-[520px] snap-x snap-mandatory overflow-x-auto scroll-smooth touch-pan-y sm:h-[560px] lg:h-[600px]"
+        className="no-scrollbar flex h-[520px] items-stretch snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-[var(--color-primary)] scroll-smooth touch-pan-y sm:h-[560px] lg:h-[600px]"
         tabIndex={0}
         onKeyDown={onKeyDown}
         onTouchStart={onTouchStart}
@@ -216,7 +216,7 @@ const HeroCarousel = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex h-full flex-col items-center justify-between gap-8 bg-[var(--color-primary)] px-6 py-8 text-white sm:px-10 sm:py-12">
+              <div className="flex h-full flex-col items-center justify-start gap-6 bg-[var(--color-primary)] px-6 py-8 text-white sm:px-10 sm:py-10">
                 <div className="space-y-4 text-center">
                   <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
                     {slide.badge}
