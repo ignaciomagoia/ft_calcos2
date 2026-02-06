@@ -14,6 +14,7 @@ type Slide = {
   description?: string;
   image: string;
   imageAlt: string;
+  showCtas?: boolean;
 };
 
 const slides: Slide[] = [
@@ -21,12 +22,13 @@ const slides: Slide[] = [
     id: "slide-1",
     layout: "split",
     badge: "FT CALCOS",
-    title: "Pega tu estilo",
+    title: "Pegá tu estilo",
     subtitle: "Calcos de vinilo premium super resistentes",
     description:
       "Calcos premium, resistentes y con envios en 24hs. Cura tu catalogo y coordina todo por WhatsApp.",
     image: "/termoprincipal.png",
     imageAlt: "Producto destacado FT Calcos",
+    showCtas: true,
   },
   {
     id: "slide-2",
@@ -37,6 +39,7 @@ const slides: Slide[] = [
     description: "Ideal para regalos, packaging y objetos personales.",
     image: "/encendedorycargador.png",
     imageAlt: "Calcos personalizados FT",
+    showCtas: false,
   },
 ];
 
@@ -111,8 +114,8 @@ const HeroCarousel = () => {
             aria-label={`${index + 1} de ${totalSlides}`}
           >
             {slide.layout === "split" ? (
-              <div className="grid h-full grid-cols-2">
-                <div className="relative flex h-full flex-col justify-start gap-6 bg-[var(--color-primary)] px-6 py-6 text-white sm:px-10 sm:py-12 lg:justify-between lg:gap-10">
+              <div className="grid h-full grid-cols-2 bg-[var(--color-primary)]">
+                <div className="relative flex h-full flex-col justify-start gap-6 px-6 py-6 text-white sm:px-10 sm:py-12 lg:justify-between lg:gap-10">
                   <Sparkle className="pointer-events-none absolute bottom-16 right-8 hidden rotate-12 text-white/40 sm:block" />
 
                   <div className="space-y-4">
@@ -138,7 +141,8 @@ const HeroCarousel = () => {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-3 text-sm font-semibold sm:flex-row">
+                  {slide.showCtas && (
+                    <div className="flex flex-col gap-3 text-sm font-semibold sm:flex-row">
                     <Link
                       href="#catalogo"
                       className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-[var(--color-accent)] px-8 py-3 text-[var(--color-primary)] transition hover:-translate-y-0.5"
@@ -151,67 +155,58 @@ const HeroCarousel = () => {
                     >
                       Ir al carrito
                     </Link>
-                  </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="relative flex h-full items-stretch justify-stretch bg-[var(--color-primary)] px-0 py-0 lg:px-4 lg:py-6">
-                  <div className="relative h-full w-full overflow-hidden rounded-none border-l border-white/20 bg-gradient-to-br from-[var(--color-secondary)]/15 via-white to-white shadow-none lg:rounded-[32px] lg:border lg:border-white/60 lg:shadow-2xl">
-                    <div className="absolute inset-0 bg-gradient-to-tr from-[var(--color-secondary)]/30 to-transparent" />
+                <div className="relative flex h-full items-center justify-center px-6 py-8 lg:px-10">
+                  <div className="relative -mt-6 h-[260px] w-full max-w-md overflow-hidden rounded-[28px] bg-white/5 sm:h-[320px] lg:h-[360px] lg:max-w-lg">
                     <Image
                       src={slide.image}
                       alt={slide.imageAlt}
                       fill
-                      sizes="(min-width: 1024px) 50vw, 50vw"
-                      className="object-contain"
+                      sizes="(min-width: 1024px) 45vw, 60vw"
+                      className="rounded-[28px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-hero-in"
                       priority={index === 0}
                     />
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="flex h-full flex-col items-center justify-start gap-6 bg-[var(--color-primary)] px-6 py-8 text-white sm:px-10 sm:py-10">
+              <div className="flex h-full flex-col items-center justify-start gap-5 bg-[var(--color-primary)] px-6 py-8 text-white sm:px-10 sm:py-10">
                 <div className="space-y-4 text-center">
                   <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
                     {slide.badge}
                   </span>
-                  <h2 className="text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
-                    {slide.title}
-                  </h2>
+                  {index === 0 ? (
+                    <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
+                      {slide.title}
+                    </h1>
+                  ) : (
+                    <h2 className="text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
+                      {slide.title}
+                    </h2>
+                  )}
                   <p className="text-base text-white/90 sm:text-lg">
                     {slide.subtitle}
                   </p>
-                  {slide.description && (
-                    <p className="text-sm text-white/75 sm:text-base">
-                      {slide.description}
-                    </p>
-                  )}
+                    {slide.description && (
+                      <p className="text-sm text-white/75 sm:text-base">
+                        {slide.description}
+                      </p>
+                    )}
                 </div>
 
-                <div className="relative w-full max-w-4xl">
-                  <div className="relative h-[260px] w-full sm:h-[320px] lg:h-[380px]">
+                <div className="w-full max-w-4xl">
+                  <div className="relative -mt-2 h-[240px] w-full overflow-hidden rounded-[28px] sm:-mt-4 sm:h-[300px] lg:h-[360px]">
                     <Image
                       src={slide.image}
                       alt={slide.imageAlt}
                       fill
                       sizes="(min-width: 1024px) 60vw, 90vw"
-                      className="object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.25)]"
+                      className="rounded-[28px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-hero-in"
                     />
                   </div>
-                </div>
-
-                <div className="flex flex-col gap-3 text-sm font-semibold sm:flex-row">
-                  <Link
-                    href="#catalogo"
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-[var(--color-accent)] px-8 py-3 text-[var(--color-primary)] transition hover:-translate-y-0.5"
-                  >
-                    Ver catálogo
-                  </Link>
-                  <Link
-                    href="/cart"
-                    className="inline-flex items-center justify-center rounded-full border border-white/40 px-8 py-3 text-white transition hover:-translate-y-0.5 hover:bg-white/10"
-                  >
-                    Ir al carrito
-                  </Link>
                 </div>
               </div>
             )}
@@ -290,3 +285,4 @@ const ArrowIcon = ({ direction }: { direction: "left" | "right" }) => (
 );
 
 export default HeroCarousel;
+

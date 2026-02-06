@@ -43,7 +43,7 @@ export default async function HomePage() {
                   <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
                     Colección
                   </p>
-                  <h3 className="break-words text-2xl font-semibold leading-snug">
+                  <h3 className="text-lg font-semibold leading-snug tracking-tight sm:text-2xl">
                     {category.name}
                   </h3>
                 </div>
