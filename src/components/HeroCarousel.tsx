@@ -159,14 +159,14 @@ const HeroCarousel = () => {
                   )}
                 </div>
 
-                <div className="relative flex h-full items-start justify-center px-6 pt-8 lg:px-10 lg:pt-10">
-                  <div className="relative -mt-4 h-[340px] w-full max-w-sm sm:-mt-6 sm:h-[380px] sm:max-w-md lg:h-[430px] lg:max-w-lg">
+                <div className="relative flex h-full items-stretch justify-center px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
+                  <div className="relative h-full w-full">
                     <Image
                       src={slide.image}
                       alt={slide.imageAlt}
                       fill
                       sizes="(min-width: 1024px) 45vw, 60vw"
-                      className="rounded-[26px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in"
+                      className="rounded-[26px] object-cover object-top drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in"
                       priority={index === 0}
                     />
                   </div>
