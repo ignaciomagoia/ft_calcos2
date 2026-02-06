@@ -37,6 +37,15 @@ img {
   max-width: 100%;
 }
 
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .card {
   border: 1px solid var(--border);
   border-radius: 1rem;
