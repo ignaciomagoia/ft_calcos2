@@ -45,26 +45,26 @@ export default async function HomePage() {
                 <Link
                   key={category.id}
                   href={`/c/${category.slug}`}
-                  className="group grid h-[250px] grid-rows-[1fr_auto] overflow-hidden rounded-[26px] border border-[rgba(143,141,242,0.45)] bg-[var(--color-secondary)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(79,74,172,0.3)] sm:h-[280px]"
+                  className="group flex h-[250px] flex-col rounded-[26px] border border-[rgba(143,141,242,0.45)] bg-[var(--color-secondary)] p-3 shadow-[0_8px_18px_rgba(79,74,172,0.18)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(79,74,172,0.3)] sm:h-[280px]"
                 >
-                  <div className="relative min-h-0 overflow-hidden px-3 pt-3">
+                  <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-[20px]">
                     {category.image_url ? (
                       <img
                         src={category.image_url}
                         alt={category.name}
-                        className="h-full w-full object-contain object-center drop-shadow-[0_8px_18px_rgba(15,23,42,0.28)] transition duration-300 group-hover:scale-105"
+                        className="h-full w-full scale-[1.08] object-contain object-center drop-shadow-[0_10px_20px_rgba(15,23,42,0.28)] transition duration-300 group-hover:scale-[1.12]"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center rounded-2xl border border-white/35 bg-white/15">
+                      <div className="flex h-full w-full items-center justify-center rounded-[20px] border border-white/35 bg-white/15">
                         <span className="rounded-full bg-white/90 px-4 py-2 text-xl font-semibold tracking-wide text-[var(--color-primary)] shadow-sm">
                           {getCategoryInitials(category.name)}
                         </span>
                       </div>
                     )}
                   </div>
-                  <div className="px-3 pb-4 pt-2 text-center">
-                    <h3 className="text-[1.05rem] font-semibold leading-tight tracking-tight text-white break-words sm:text-xl">
+                  <div className="mt-2 flex h-12 items-end justify-center px-2 pb-1 text-center">
+                    <h3 className="text-[1.05rem] font-semibold leading-tight tracking-tight break-words text-white sm:text-xl">
                       {category.name}
                     </h3>
                   </div>
