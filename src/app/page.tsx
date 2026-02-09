@@ -45,14 +45,14 @@ export default async function HomePage() {
                 <Link
                   key={category.id}
                   href={`/c/${category.slug}`}
-                  className="group flex h-[250px] flex-col rounded-[26px] border border-[rgba(143,141,242,0.45)] bg-[var(--color-secondary)] p-3 shadow-[0_8px_18px_rgba(79,74,172,0.18)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(79,74,172,0.3)] sm:h-[280px]"
+                  className="group flex h-[250px] flex-col overflow-hidden rounded-[26px] border border-[rgba(143,141,242,0.45)] bg-[var(--color-secondary)] px-3 pb-4 pt-3 shadow-[0_8px_18px_rgba(79,74,172,0.18)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(79,74,172,0.3)] sm:h-[280px]"
                 >
-                  <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-[20px]">
+                  <div className="relative flex min-h-0 flex-1 items-center justify-center">
                     {category.image_url ? (
                       <img
                         src={category.image_url}
                         alt={category.name}
-                        className="h-full w-full scale-[1.08] object-contain object-center drop-shadow-[0_10px_20px_rgba(15,23,42,0.28)] transition duration-300 group-hover:scale-[1.12]"
+                        className="h-full w-full object-contain object-center transition duration-300 group-hover:scale-[1.03]"
                         loading="lazy"
                       />
                     ) : (
