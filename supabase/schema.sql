@@ -4,9 +4,13 @@ create table if not exists public.categories (
   id uuid primary key default uuid_generate_v4(),
   name text not null,
   slug text unique not null,
+  image_url text,
   sort_order int default 0,
   created_at timestamptz default now()
 );
+
+alter table public.categories
+  add column if not exists image_url text;
 
 create table if not exists public.products (
   id uuid primary key default uuid_generate_v4(),

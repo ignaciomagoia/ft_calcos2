@@ -1,4 +1,7 @@
-import Image from "next/image";
+﻿import Image from "next/image";
+
+const INSTAGRAM_PROOF_URL =
+  "https://www.instagram.com/reel/DMG3WCnxf4P/?igsh=MXZxOHBzeGQ2Zm1rMQ==";
 
 const PremiumQualitySection = () => {
   return (
@@ -12,6 +15,17 @@ const PremiumQualitySection = () => {
             height={900}
             className="h-auto w-full object-contain"
           />
+        </div>
+
+        <div className="mt-4 flex justify-center">
+          <a
+            href={INSTAGRAM_PROOF_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 !text-white text-sm font-semibold shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+          >
+            {"\uD83D\uDD25 Ver pruebas reales"}
+          </a>
         </div>
       </div>
     </section>

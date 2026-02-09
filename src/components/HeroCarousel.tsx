@@ -23,9 +23,7 @@ const slides: Slide[] = [
     layout: "split",
     badge: "FT CALCOS",
     title: "Pegá tu estilo",
-    subtitle: "Calcos de vinilo premium super resistentes",
-    description:
-      "Calcos premium, resistentes y con envíos en 24hs. Curá tu catálogo y coordiná todo por WhatsApp.",
+    subtitle: "Calcos de vinilo premium super resistentes ✨",
     image: "/termoprincipal.png",
     imageAlt: "Producto destacado FT Calcos",
     showCtas: true,
@@ -134,11 +132,6 @@ const HeroCarousel = () => {
                     <p className="text-base text-white/90 sm:text-lg">
                       {slide.subtitle}
                     </p>
-                    {slide.description && (
-                      <p className="text-sm text-white/75 sm:text-base">
-                        {slide.description}
-                      </p>
-                    )}
                   </div>
 
                   {slide.showCtas && (

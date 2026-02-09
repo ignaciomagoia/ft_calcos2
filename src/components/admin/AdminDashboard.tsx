@@ -13,6 +13,8 @@ type Props = {
 type CategoryFormState = {
   id?: string;
   name: string;
+  image_url: string;
+  file?: File | null;
   sort_order: string;
 };
 
@@ -28,6 +30,8 @@ type ProductFormState = {
 
 const emptyCategoryForm: CategoryFormState = {
   name: "",
+  image_url: "",
+  file: null,
   sort_order: "0",
 };
 
@@ -107,9 +111,32 @@ export const AdminDashboard = ({
       categoryForm.id
     );
 
+    let imageUrl = categoryForm.image_url.trim();
+
+    if (categoryForm.file) {
+      const fileExt = categoryForm.file.name.split(".").pop() ?? "jpg";
+      const path = `categories/${crypto.randomUUID()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from("products")
+        .upload(path, categoryForm.file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        setCategoryMessage(uploadError.message);
+        setCategoryLoading(false);
+        return;
+      }
+
+      const { data } = supabase.storage.from("products").getPublicUrl(path);
+      imageUrl = data.publicUrl;
+    }
+
     const payload = {
       name: trimmedName,
       slug,
+      image_url: imageUrl || null,
       sort_order: Number(categoryForm.sort_order ?? 0),
     };
 
@@ -144,6 +171,8 @@ export const AdminDashboard = ({
     setCategoryForm({
       id: category.id,
       name: category.name,
+      image_url: category.image_url ?? "",
+      file: null,
       sort_order: String(category.sort_order ?? 0),
     });
   };
@@ -348,6 +377,32 @@ export const AdminDashboard = ({
               }
               className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
             />
+            <input
+              type="url"
+              placeholder="URL de imagen (opcional)"
+              value={categoryForm.image_url}
+              onChange={(event) =>
+                setCategoryForm((prev) => ({
+                  ...prev,
+                  image_url: event.target.value,
+                }))
+              }
+              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
+            />
+            <label className="text-sm font-medium text-slate-600">
+              Subir imagen de categoría (opcional)
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(event) =>
+                  setCategoryForm((prev) => ({
+                    ...prev,
+                    file: event.target.files?.[0] ?? null,
+                  }))
+                }
+                className="mt-2 w-full rounded-2xl border border-dashed border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
+              />
+            </label>
             <button
               type="submit"
               className="w-full rounded-full bg-[var(--color-primary)] px-6 py-3 text-white hover:bg-[var(--color-primary-dark)]"
@@ -372,9 +427,23 @@ export const AdminDashboard = ({
                   key={category.id}
                   className="flex items-center justify-between rounded-2xl border border-slate-100 px-4 py-3"
                 >
-                  <div>
+                  <div className="flex min-w-0 items-center gap-3">
+                    {category.image_url ? (
+                      <img
+                        src={category.image_url}
+                        alt={category.name}
+                        className="h-10 w-10 rounded-xl object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-[10px] font-semibold text-slate-500">
+                        IMG
+                      </div>
+                    )}
+                    <div className="min-w-0">
                     <p className="font-semibold">{category.name}</p>
                     <p className="text-xs text-slate-400">{category.slug}</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 text-xs font-semibold">
                     <button
