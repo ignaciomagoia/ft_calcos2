@@ -13,7 +13,6 @@ export type Product = {
   price: number;
   category_id: string;
   image_url: string | null;
-  active: boolean;
   created_at?: string | null;
   category?: Pick<Category, "id" | "name" | "slug"> | null;
 };

@@ -41,21 +41,14 @@ export const getCategoryBySlug = async (
 };
 
 export const getProductsByCategoryId = async (
-  categoryId: string,
-  includeInactive = false
+  categoryId: string
 ): Promise<Product[]> => {
   const supabase = await createSupabaseServerClient();
-  let query = supabase
+  const { data, error } = await supabase
     .from("products")
     .select("*")
     .eq("category_id", categoryId)
     .order("created_at", { ascending: false });
-
-  if (!includeInactive) {
-    query = query.eq("active", true);
-  }
-
-  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching products", error);
@@ -73,7 +66,6 @@ export const getProductWithCategory = async (
     .from("products")
     .select("*, categories(id, name, slug)")
     .eq("id", id)
-    .eq("active", true)
     .maybeSingle();
 
   if (error) {

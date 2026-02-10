@@ -24,7 +24,6 @@ type ProductFormState = {
   price: string;
   category_id: string;
   image_url: string;
-  active: boolean;
   file?: File | null;
 };
 
@@ -40,7 +39,6 @@ const createEmptyProductForm = (categoryId?: string): ProductFormState => ({
   price: "",
   category_id: categoryId ?? "",
   image_url: "",
-  active: true,
   file: null,
 });
 
@@ -363,7 +361,6 @@ export const AdminDashboard = ({
       price: Number(productForm.price),
       category_id: productForm.category_id,
       image_url: imageUrl,
-      active: productForm.active,
     };
 
     const query = productForm.id
@@ -419,7 +416,6 @@ export const AdminDashboard = ({
       price: String(product.price),
       category_id: product.category_id,
       image_url: product.image_url ?? "",
-      active: product.active,
       file: null,
     });
     setProductMessage(null);
@@ -451,23 +447,6 @@ export const AdminDashboard = ({
     } else {
       setProducts((prev) => prev.filter((prod) => prod.id !== product.id));
       setProductMessage(warning ?? "Producto eliminado.");
-    }
-  };
-
-  const handleToggleProduct = async (product: Product) => {
-    const { data, error } = await supabase
-      .from("products")
-      .update({ active: !product.active })
-      .eq("id", product.id)
-      .select("*")
-      .single();
-
-    if (error) {
-      setProductError(error.message);
-    } else if (data) {
-      setProducts((prev) =>
-        prev.map((item) => (item.id === product.id ? data : item))
-      );
     }
   };
 
@@ -701,20 +680,6 @@ export const AdminDashboard = ({
                 Máx 350 KB (JPG/PNG/WebP)
               </span>
             </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={productForm.active}
-                onChange={(event) =>
-                  setProductForm((prev) => ({
-                    ...prev,
-                    active: event.target.checked,
-                  }))
-                }
-              />
-              Activo
-            </label>
-
             <button
               type="submit"
               className="rounded-full bg-[var(--color-primary)] px-6 py-3 text-white hover:bg-[var(--color-primary-dark)]"
@@ -764,21 +729,12 @@ export const AdminDashboard = ({
                       {formatCurrency(product.price)}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400">
-                    {product.active ? "Activo" : "Inactivo"}
-                  </p>
                   <div className="flex flex-wrap items-center gap-3 text-xs font-semibold">
                     <button
                       onClick={() => handleEditProduct(product)}
                       className="text-slate-500 hover:text-slate-900"
                     >
                       Editar
-                    </button>
-                    <button
-                      onClick={() => handleToggleProduct(product)}
-                      className="text-amber-600 hover:text-amber-700"
-                    >
-                      {product.active ? "Pausar" : "Activar"}
                     </button>
                     <button
                       onClick={() => handleDeleteProduct(product)}
