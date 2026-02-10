@@ -44,6 +44,48 @@ const createEmptyProductForm = (categoryId?: string): ProductFormState => ({
   file: null,
 });
 
+const getStoragePathFromImageValue = (
+  imageValue: string | null | undefined
+): string | null => {
+  if (!imageValue) return null;
+
+  const cleanValue = imageValue.trim();
+  if (!cleanValue) return null;
+
+  const marker = "/storage/v1/object/public/products/";
+  const normalizePath = (path: string) => {
+    const withoutQuery = path.split("?")[0].split("#")[0];
+    const normalized = withoutQuery.replace(/^\/+/, "");
+    if (
+      normalized.startsWith("uploads/") ||
+      normalized.startsWith("categories/")
+    ) {
+      return decodeURIComponent(normalized);
+    }
+    return null;
+  };
+
+  const directPath = normalizePath(cleanValue);
+  if (directPath) return directPath;
+
+  try {
+    const parsedUrl = new URL(cleanValue);
+    const markerIndex = parsedUrl.pathname.indexOf(marker);
+    if (markerIndex >= 0) {
+      return normalizePath(
+        parsedUrl.pathname.slice(markerIndex + marker.length)
+      );
+    }
+  } catch {
+    const markerIndex = cleanValue.indexOf(marker);
+    if (markerIndex >= 0) {
+      return normalizePath(cleanValue.slice(markerIndex + marker.length));
+    }
+  }
+
+  return null;
+};
+
 export const AdminDashboard = ({
   initialCategories,
   initialProducts,
@@ -277,12 +319,32 @@ export const AdminDashboard = ({
     if (error || !data) {
       setProductError(error?.message ?? "Error guardando producto");
     } else {
+      const currentProduct = productForm.id
+        ? products.find((prod) => prod.id === productForm.id)
+        : null;
+      let warning: string | null = null;
+
+      const previousPath = getStoragePathFromImageValue(
+        currentProduct?.image_url
+      );
+      const nextPath = getStoragePathFromImageValue(imageUrl);
+
+      if (previousPath && previousPath !== nextPath) {
+        const { error: oldImageError } = await supabase.storage
+          .from("products")
+          .remove([previousPath]);
+        if (oldImageError) {
+          warning =
+            "Producto guardado. No se pudo borrar la imagen anterior del storage.";
+        }
+      }
+
       setProducts((prev) => {
         const filtered = prev.filter((prod) => prod.id !== data.id);
         return [data, ...filtered];
       });
       setProductForm(createEmptyProductForm(productForm.category_id));
-      setProductMessage("Producto guardado.");
+      setProductMessage(warning ?? "Producto guardado.");
     }
 
     setProductLoading(false);
@@ -301,14 +363,32 @@ export const AdminDashboard = ({
     setProductMessage(null);
   };
 
-  const handleDeleteProduct = async (id: string) => {
+  const handleDeleteProduct = async (product: Product) => {
     if (!window.confirm("¿Eliminar el producto?")) return;
-    const { error } = await supabase.from("products").delete().eq("id", id);
+    setProductError(null);
+
+    let warning: string | null = null;
+    const storagePath = getStoragePathFromImageValue(product.image_url);
+
+    if (storagePath) {
+      const { error: storageError } = await supabase.storage
+        .from("products")
+        .remove([storagePath]);
+      if (storageError) {
+        warning =
+          "No se pudo borrar la imagen del storage, pero el producto se eliminara igual.";
+      }
+    }
+
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", product.id);
     if (error) {
       setProductError(error.message);
     } else {
-      setProducts((prev) => prev.filter((prod) => prod.id !== id));
-      setProductMessage("Producto eliminado.");
+      setProducts((prev) => prev.filter((prod) => prod.id !== product.id));
+      setProductMessage(warning ?? "Producto eliminado.");
     }
   };
 
@@ -631,7 +711,7 @@ export const AdminDashboard = ({
                       {product.active ? "Pausar" : "Activar"}
                     </button>
                     <button
-                      onClick={() => handleDeleteProduct(product.id)}
+                      onClick={() => handleDeleteProduct(product)}
                       className="text-rose-500 hover:text-rose-700"
                     >
                       Borrar
