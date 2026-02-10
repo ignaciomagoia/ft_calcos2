@@ -12,6 +12,15 @@ type NavbarClientProps = {
   categories: Category[];
 };
 
+const fakeDrawerCategory: Category = {
+  id: "fake-personalizados-menu",
+  name: "Personalizados",
+  slug: "personalizados",
+  image_url: "/personalizadas.png",
+  sort_order: Number.MAX_SAFE_INTEGER,
+  created_at: null,
+};
+
 const NavbarClient = ({ categories }: NavbarClientProps) => {
   const pathname = usePathname();
   const items = useCartStore((state) => state.items);
@@ -19,6 +28,12 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
     () => items.reduce((sum, item) => sum + item.quantity, 0),
     [items]
   );
+  const drawerCategories = useMemo(() => {
+    if (categories.some((category) => category.slug === "personalizados")) {
+      return categories;
+    }
+    return [...categories, fakeDrawerCategory];
+  }, [categories]);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -88,7 +103,7 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
       <MobileMenuDrawer
         open={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        categories={categories}
+        categories={drawerCategories}
       />
     </>
   );
