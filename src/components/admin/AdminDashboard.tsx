@@ -44,6 +44,29 @@ const createEmptyProductForm = (categoryId?: string): ProductFormState => ({
   file: null,
 });
 
+const MAX_PRODUCT_IMAGE_BYTES = 350 * 1024;
+const ALLOWED_PRODUCT_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
+
+const validateProductImageFile = (file: File | null | undefined): string | null => {
+  if (!file) return null;
+
+  if (!ALLOWED_PRODUCT_IMAGE_TYPES.includes(file.type)) {
+    return "Formato no permitido. Usá JPG, PNG o WebP.";
+  }
+
+  if (file.size > MAX_PRODUCT_IMAGE_BYTES) {
+    const fileSizeKb = Math.round(file.size / 1024);
+    const maxSizeKb = Math.round(MAX_PRODUCT_IMAGE_BYTES / 1024);
+    return `La imagen pesa ${fileSizeKb} KB. Máximo permitido: ${maxSizeKb} KB. Reducila y probá de nuevo.`;
+  }
+
+  return null;
+};
+
 const getStoragePathsFromImageValue = (
   imageValue: string | null | undefined
 ): string[] => {
@@ -287,6 +310,13 @@ export const AdminDashboard = ({
     setProductLoading(true);
     setProductMessage(null);
     setProductError(null);
+
+    const fileValidationError = validateProductImageFile(productForm.file);
+    if (fileValidationError) {
+      setProductError(fileValidationError);
+      setProductLoading(false);
+      return;
+    }
 
     let imageUrl = productForm.image_url;
 
@@ -653,15 +683,23 @@ export const AdminDashboard = ({
               Subir imagen al bucket
               <input
                 type="file"
-                accept="image/*"
-                onChange={(event) =>
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => {
+                  const selectedFile = event.target.files?.[0] ?? null;
+                  const fileValidationError = validateProductImageFile(selectedFile);
+
                   setProductForm((prev) => ({
                     ...prev,
-                    file: event.target.files?.[0],
-                  }))
-                }
+                    file: selectedFile,
+                  }));
+
+                  setProductError(fileValidationError);
+                }}
                 className="mt-2 w-full rounded-2xl border border-dashed border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
               />
+              <span className="mt-2 block text-xs text-slate-500">
+                Máx 350 KB (JPG/PNG/WebP)
+              </span>
             </label>
             <label className="flex items-center gap-2 text-sm">
               <input
