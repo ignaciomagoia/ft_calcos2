@@ -35,7 +35,7 @@ const slides: Slide[] = [
     title: "Diseños que se pegan a vos",
     subtitle: "Mandanos tu idea y armamos tus calcos a medida.",
     description: "Ideal para regalos, packaging y objetos personales.",
-    image: "/encendedorycargador.png",
+    image: "/principal2.png",
     imageAlt: "Calcos personalizados FT",
     showCtas: false,
   },
