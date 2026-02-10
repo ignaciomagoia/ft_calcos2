@@ -15,23 +15,18 @@ export const createSupabaseServerClient = async () => {
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
-      get(name) {
-        return cookieStore.get(name)?.value;
+      getAll() {
+        return cookieStore.getAll();
       },
-      set(name, value, options) {
+      async setAll(cookiesToSet) {
+        // In Server Components cookies are read-only.
+        // Middleware/route handlers own refresh/write flows.
         try {
-          cookieStore.set({ name, value, ...options });
+          for (const cookie of cookiesToSet) {
+            await cookieStore.set(cookie.name, cookie.value, cookie.options);
+          }
         } catch {
-          // In Server Components cookies are read-only.
-          // Middleware handles refresh/write flows when needed.
-        }
-      },
-      remove(name, options) {
-        try {
-          cookieStore.set({ name, value: "", ...options, maxAge: 0 });
-        } catch {
-          // In Server Components cookies are read-only.
-          // Middleware handles refresh/write flows when needed.
+          // Ignore write attempts during RSC rendering.
         }
       },
     },

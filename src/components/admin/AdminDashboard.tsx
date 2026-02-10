@@ -44,15 +44,16 @@ const createEmptyProductForm = (categoryId?: string): ProductFormState => ({
   file: null,
 });
 
-const getStoragePathFromImageValue = (
+const getStoragePathsFromImageValue = (
   imageValue: string | null | undefined
-): string | null => {
-  if (!imageValue) return null;
+): string[] => {
+  if (!imageValue) return [];
 
   const cleanValue = imageValue.trim();
-  if (!cleanValue) return null;
+  if (!cleanValue) return [];
 
   const marker = "/storage/v1/object/public/products/";
+  const candidates = new Set<string>();
   const normalizePath = (path: string) => {
     const withoutQuery = path.split("?")[0].split("#")[0];
     const normalized = withoutQuery.replace(/^\/+/, "");
@@ -66,24 +67,54 @@ const getStoragePathFromImageValue = (
   };
 
   const directPath = normalizePath(cleanValue);
-  if (directPath) return directPath;
+  if (directPath) candidates.add(directPath);
 
   try {
     const parsedUrl = new URL(cleanValue);
     const markerIndex = parsedUrl.pathname.indexOf(marker);
     if (markerIndex >= 0) {
-      return normalizePath(
+      const fromMarker = normalizePath(
         parsedUrl.pathname.slice(markerIndex + marker.length)
       );
+      if (fromMarker) candidates.add(fromMarker);
+    }
+
+    const uploadsIndex = parsedUrl.pathname.indexOf("/uploads/");
+    if (uploadsIndex >= 0) {
+      const uploadsPath = normalizePath(
+        parsedUrl.pathname.slice(uploadsIndex + 1)
+      );
+      if (uploadsPath) candidates.add(uploadsPath);
+    }
+
+    const categoriesIndex = parsedUrl.pathname.indexOf("/categories/");
+    if (categoriesIndex >= 0) {
+      const categoriesPath = normalizePath(
+        parsedUrl.pathname.slice(categoriesIndex + 1)
+      );
+      if (categoriesPath) candidates.add(categoriesPath);
     }
   } catch {
     const markerIndex = cleanValue.indexOf(marker);
     if (markerIndex >= 0) {
-      return normalizePath(cleanValue.slice(markerIndex + marker.length));
+      const fromMarker = normalizePath(cleanValue.slice(markerIndex + marker.length));
+      if (fromMarker) candidates.add(fromMarker);
+    }
+
+    const uploadsIndex = cleanValue.indexOf("uploads/");
+    if (uploadsIndex >= 0) {
+      const uploadsPath = normalizePath(cleanValue.slice(uploadsIndex));
+      if (uploadsPath) candidates.add(uploadsPath);
+    }
+
+    const categoriesIndex = cleanValue.indexOf("categories/");
+    if (categoriesIndex >= 0) {
+      const categoriesPath = normalizePath(cleanValue.slice(categoriesIndex));
+      if (categoriesPath) candidates.add(categoriesPath);
     }
   }
 
-  return null;
+  return Array.from(candidates);
 };
 
 export const AdminDashboard = ({
@@ -324,15 +355,16 @@ export const AdminDashboard = ({
         : null;
       let warning: string | null = null;
 
-      const previousPath = getStoragePathFromImageValue(
+      const previousPaths = getStoragePathsFromImageValue(
         currentProduct?.image_url
       );
-      const nextPath = getStoragePathFromImageValue(imageUrl);
+      const nextPaths = new Set(getStoragePathsFromImageValue(imageUrl));
+      const pathsToRemove = previousPaths.filter((path) => !nextPaths.has(path));
 
-      if (previousPath && previousPath !== nextPath) {
+      if (pathsToRemove.length > 0) {
         const { error: oldImageError } = await supabase.storage
           .from("products")
-          .remove([previousPath]);
+          .remove(pathsToRemove);
         if (oldImageError) {
           warning =
             "Producto guardado. No se pudo borrar la imagen anterior del storage.";
@@ -368,12 +400,12 @@ export const AdminDashboard = ({
     setProductError(null);
 
     let warning: string | null = null;
-    const storagePath = getStoragePathFromImageValue(product.image_url);
+    const storagePaths = getStoragePathsFromImageValue(product.image_url);
 
-    if (storagePath) {
+    if (storagePaths.length > 0) {
       const { error: storageError } = await supabase.storage
         .from("products")
-        .remove([storagePath]);
+        .remove(storagePaths);
       if (storageError) {
         warning =
           "No se pudo borrar la imagen del storage, pero el producto se eliminara igual.";
