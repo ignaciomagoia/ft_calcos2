@@ -23,6 +23,11 @@ export const metadata: Metadata = {
   },
   description:
     "E-commerce minimalista para gestionar el catálogo de calcos EFETE: categorías, carrito y checkout por WhatsApp.",
+  icons: {
+    icon: "/icon.png?v=2",
+    shortcut: "/icon.png?v=2",
+    apple: "/apple-icon.png?v=2",
+  },
 };
 
 export default function RootLayout({

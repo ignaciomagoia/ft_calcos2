@@ -189,13 +189,28 @@ const HeroCarousel = () => {
                     </h2>
                   )}
                   <p className="text-base text-white/90 sm:text-lg">
-                    {slide.subtitle}
-                  </p>
-                    {slide.description && (
-                      <p className="text-sm text-white/75 sm:text-base">
-                        {slide.description}
-                      </p>
+                    {slide.id === "slide-2" ? (
+                      <>
+                        Mandanos tu idea y armamos tus calcos{" "}
+                        <br className="sm:hidden" />
+                        a medida.
+                      </>
+                    ) : (
+                      slide.subtitle
                     )}
+                  </p>
+                  {slide.description && (
+                    <p className="text-sm text-white/75 sm:text-base">
+                      {slide.id === "slide-2" ? (
+                        <>
+                          Ideal para regalos, packaging{" "}
+                          <br className="sm:hidden" />y objetos personales.
+                        </>
+                      ) : (
+                        slide.description
+                      )}
+                    </p>
+                  )}
                 </div>
 
                 <div className="w-full max-w-4xl">
@@ -286,5 +301,4 @@ const ArrowIcon = ({ direction }: { direction: "left" | "right" }) => (
 );
 
 export default HeroCarousel;
-
 
