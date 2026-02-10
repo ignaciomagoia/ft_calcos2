@@ -19,10 +19,20 @@ export const createSupabaseServerClient = async () => {
         return cookieStore.get(name)?.value;
       },
       set(name, value, options) {
-        cookieStore.set({ name, value, ...options });
+        try {
+          cookieStore.set({ name, value, ...options });
+        } catch {
+          // In Server Components cookies are read-only.
+          // Middleware handles refresh/write flows when needed.
+        }
       },
       remove(name, options) {
-        cookieStore.set({ name, value: "", ...options, maxAge: 0 });
+        try {
+          cookieStore.set({ name, value: "", ...options, maxAge: 0 });
+        } catch {
+          // In Server Components cookies are read-only.
+          // Middleware handles refresh/write flows when needed.
+        }
       },
     },
   });

@@ -17,8 +17,17 @@ const getCategoryInitials = (name: string) =>
     .slice(0, 2)
     .toUpperCase();
 
+const fakePersonalizedCategory = {
+  id: "fake-personalizados",
+  name: "Personalizados",
+  slug: "personalizados",
+  image_url: "/personalizadas.png",
+  sort_order: Number.MAX_SAFE_INTEGER,
+};
+
 export default async function HomePage() {
   const categories = await getCategories();
+  const categoriesWithFake = [...categories, fakePersonalizedCategory];
 
   return (
     <div className="space-y-0">
@@ -27,51 +36,49 @@ export default async function HomePage() {
       <section id="catalogo" className="w-full bg-white py-8">
         <div className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-2">
-            <p className="pill">Catálogo</p>
-            <h2 className="text-3xl font-semibold">Elegí tu categoría</h2>
+            <p className="pill">Catalogo</p>
+            <h2 className="text-3xl font-semibold">Elegi tu categoria</h2>
             <p className="text-slate-600">
-              Navegá por las colecciones para ver todos los productos
+              Navega por las colecciones para ver todos los productos
               disponibles.
             </p>
           </div>
 
-          {categories.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
-              Aún no hay categorías cargadas en Supabase.
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-              {categories.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/c/${category.slug}`}
-                  className="group flex h-[250px] flex-col overflow-hidden rounded-[26px] border border-[rgba(143,141,242,0.45)] bg-[var(--color-secondary)] px-3 pb-4 pt-3 shadow-[0_8px_18px_rgba(79,74,172,0.18)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(79,74,172,0.3)] sm:h-[280px]"
-                >
-                  <div className="relative flex min-h-0 flex-1 items-center justify-center">
-                    {category.image_url ? (
-                      <img
-                        src={category.image_url}
-                        alt={category.name}
-                        className="h-full w-full object-contain object-center transition duration-300 group-hover:scale-[1.03]"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center rounded-[20px] border border-white/35 bg-white/15">
-                        <span className="rounded-full bg-white/90 px-4 py-2 text-xl font-semibold tracking-wide text-[var(--color-primary)] shadow-sm">
-                          {getCategoryInitials(category.name)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-2 flex h-12 items-end justify-center px-2 pb-1 text-center">
-                    <h3 className="text-[1.05rem] font-semibold leading-tight tracking-tight break-words text-white sm:text-xl">
-                      {category.name}
-                    </h3>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {categoriesWithFake.map((category) => (
+              <Link
+                key={category.id}
+                href={
+                  category.id === fakePersonalizedCategory.id
+                    ? "/personalizados"
+                    : `/c/${category.slug}`
+                }
+                className="group flex h-[250px] flex-col overflow-hidden rounded-[26px] border border-[rgba(143,141,242,0.45)] bg-[var(--color-secondary)] px-3 pb-4 pt-3 shadow-[0_8px_18px_rgba(79,74,172,0.18)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(79,74,172,0.3)] sm:h-[280px]"
+              >
+                <div className="relative flex min-h-0 flex-1 items-center justify-center">
+                  {category.image_url ? (
+                    <img
+                      src={category.image_url}
+                      alt={category.name}
+                      className="h-full w-full object-contain object-center transition duration-300 group-hover:scale-[1.03]"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center rounded-[20px] border border-white/35 bg-white/15">
+                      <span className="rounded-full bg-white/90 px-4 py-2 text-xl font-semibold tracking-wide text-[var(--color-primary)] shadow-sm">
+                        {getCategoryInitials(category.name)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2 flex h-12 items-end justify-center px-2 pb-1 text-center">
+                  <h3 className="text-[1.05rem] font-semibold leading-tight tracking-tight break-words text-white sm:text-xl">
+                    {category.name}
+                  </h3>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 

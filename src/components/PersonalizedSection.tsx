@@ -49,7 +49,7 @@ const PersonalizedSection = () => {
         <div className="flex items-center justify-center">
           <div className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-2xl">
             <Image
-              src="/stickerpersonalizado.png"
+              src="/personalizadas.png"
               alt="Placeholder ilustrativo para personalizados"
               width={640}
               height={640}

@@ -55,7 +55,7 @@ const WholesalePersonalizedSection = () => {
           <div className="flex items-center justify-center">
             <div className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-slate-100 bg-white shadow-xl">
               <Image
-                src="/stickerpormayor.jpg"
+                src="/personalizadasmarca.png"
                 alt="Placeholder para personalizados por mayor"
                 width={640}
                 height={640}
