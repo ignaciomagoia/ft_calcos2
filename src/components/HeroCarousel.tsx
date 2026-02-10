@@ -191,9 +191,9 @@ const HeroCarousel = () => {
                   <p className="text-base text-white/90 sm:text-lg">
                     {slide.id === "slide-2" ? (
                       <>
-                        Mandanos tu idea y armamos tus calcos{" "}
+                        Mandanos tu idea y armamos{" "}
                         <br className="sm:hidden" />
-                        a medida.
+                        tus calcos a medida.
                       </>
                     ) : (
                       slide.subtitle
@@ -301,4 +301,3 @@ const ArrowIcon = ({ direction }: { direction: "left" | "right" }) => (
 );
 
 export default HeroCarousel;
-
