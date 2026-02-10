@@ -59,9 +59,20 @@ export const AdminDashboard = ({
   const [productForm, setProductForm] = useState<ProductFormState>(
     createEmptyProductForm(initialCategories[0]?.id)
   );
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [productLoading, setProductLoading] = useState(false);
   const [productMessage, setProductMessage] = useState<string | null>(null);
   const [productError, setProductError] = useState<string | null>(null);
+  const filteredAndSortedProducts = useMemo(() => {
+    const filtered =
+      selectedCategoryId === "all"
+        ? products
+        : products.filter((product) => product.category_id === selectedCategoryId);
+
+    return [...filtered].sort((a, b) =>
+      a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+    );
+  }, [products, selectedCategoryId]);
 
   const ensureUniqueCategorySlug = async (name: string, id?: string) => {
     const base = slugify(name) || "categoria";
@@ -571,14 +582,28 @@ export const AdminDashboard = ({
         </div>
 
         <div className="card max-h-[600px] overflow-y-auto rounded-3xl p-4">
-          <h3 className="px-2 text-lg font-semibold text-slate-900">
-            Productos ({products.length})
-          </h3>
+          <div className="flex flex-wrap items-center justify-between gap-3 px-2">
+            <h3 className="text-lg font-semibold text-slate-900">
+              Productos ({filteredAndSortedProducts.length})
+            </h3>
+            <select
+              value={selectedCategoryId}
+              onChange={(event) => setSelectedCategoryId(event.target.value)}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
+            >
+              <option value="all">Todas</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="mt-3 space-y-3">
-            {products.length === 0 ? (
+            {filteredAndSortedProducts.length === 0 ? (
               <p className="text-sm text-slate-500">Sin productos cargados.</p>
             ) : (
-              products.map((product) => (
+              filteredAndSortedProducts.map((product) => (
                 <div
                   key={product.id}
                   className="flex flex-col gap-2 rounded-2xl border border-slate-100 px-3 py-3 text-sm"
