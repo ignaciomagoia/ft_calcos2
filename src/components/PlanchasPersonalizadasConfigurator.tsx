@@ -182,6 +182,15 @@ const PlanchasPersonalizadasConfigurator = () => {
               />
             ))}
           </div>
+
+          <div className="mt-4 flex justify-center">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Volver al catálogo
+            </Link>
+          </div>
         </div>
       </section>
 

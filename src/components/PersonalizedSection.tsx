@@ -1,8 +1,5 @@
-import Image from "next/image";
-
-const PERSONALIZED_MESSAGE = encodeURIComponent(
-  "Hola! Quiero un calco personalizado. Te envío mi diseño/foto y coordinamos tamaño y cantidad."
-);
+﻿import Image from "next/image";
+import Link from "next/link";
 
 const bullets = ["Ideal para regalos", "Objetos personales"];
 
@@ -36,14 +33,12 @@ const PersonalizedSection = () => {
             ))}
           </ul>
 
-        <a
-          href={`https://wa.me/5493516183951?text=${PERSONALIZED_MESSAGE}`}
-          className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 !text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-            Quiero personalizados (WhatsApp)
-          </a>
+          <Link
+            href="/personalizados"
+            className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 !text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+          >
+            Quiero personalizados
+          </Link>
         </div>
 
         <div className="flex items-center justify-center">

@@ -19,7 +19,7 @@ const WholesalePersonalizedSection = () => {
           <div className="space-y-6">
             <div className="space-y-3">
               <p className="pill w-fit bg-[var(--color-secondary)] text-white">
-                5. PERSONALIZADOS POR MAYOR
+                PERSONALIZADOS POR MAYOR
               </p>
               <h3 className="text-3xl font-semibold leading-tight text-slate-900">
                 Calcos personalizados para potenciar tu marca o emprendimiento
