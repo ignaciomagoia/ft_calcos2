@@ -174,7 +174,11 @@ const HeroCarousel = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex h-full flex-col items-center justify-start gap-5 bg-[var(--color-primary)] px-6 py-8 text-white sm:px-10 sm:py-10">
+              <div
+                className={`flex h-full flex-col items-center justify-start bg-[var(--color-primary)] px-6 py-8 text-white sm:px-10 sm:py-10 ${
+                  slide.id === "slide-2" ? "gap-3 sm:gap-5" : "gap-5"
+                }`}
+              >
                 <div className="space-y-4 text-center">
                   <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
                     {slide.badge}
@@ -200,7 +204,11 @@ const HeroCarousel = () => {
                     )}
                   </p>
                   {slide.description && (
-                    <p className="text-sm text-white/75 sm:text-base">
+                    <p
+                      className={`text-sm text-white/75 sm:text-base ${
+                        slide.id === "slide-2" ? "hidden sm:block" : ""
+                      }`}
+                    >
                       {slide.id === "slide-2" ? (
                         <>
                           Ideal para regalos, packaging{" "}
@@ -214,7 +222,13 @@ const HeroCarousel = () => {
                 </div>
 
                 <div className="w-full max-w-4xl">
-                  <div className="relative -mt-2 h-[260px] w-full sm:-mt-4 sm:h-[320px] lg:h-[380px]">
+                  <div
+                    className={`relative w-full ${
+                      slide.id === "slide-2"
+                        ? "shrink-0 -mt-12 h-[290px] sm:-mt-4 sm:h-[320px] lg:-mt-8 lg:h-[380px]"
+                        : "-mt-2 h-[260px] sm:-mt-4 sm:h-[320px] lg:h-[380px]"
+                    }`}
+                  >
                     <Image
                       src={slide.image}
                       alt={slide.imageAlt}

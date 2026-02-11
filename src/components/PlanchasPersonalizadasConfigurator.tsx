@@ -111,11 +111,11 @@ const PlanchasPersonalizadasConfigurator = () => {
   return (
     <>
       <section className="w-full bg-white py-4 sm:py-6">
-        <div className="mx-auto w-full sm:max-w-6xl sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-4xl px-0 sm:px-6 lg:px-8">
           <div className="relative">
             <div
               ref={viewportRef}
-              className="no-scrollbar flex h-[240px] snap-x snap-mandatory overflow-x-auto overflow-y-hidden rounded-none touch-pan-x bg-white scroll-smooth sm:h-[330px] sm:rounded-2xl lg:h-[420px]"
+              className="no-scrollbar flex h-[290px] w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden rounded-none touch-pan-x bg-white scroll-smooth sm:h-[340px] sm:rounded-2xl lg:h-[540px] xl:h-[600px]"
               tabIndex={0}
               onKeyDown={onCarouselKeyDown}
               role="region"
@@ -136,10 +136,11 @@ const PlanchasPersonalizadasConfigurator = () => {
                   <Image
                     src={slide.src}
                     alt={slide.alt}
-                    fill
-                    sizes="(max-width: 1023px) 100vw, 1100px"
+                    width={2226}
+                    height={1696}
+                    sizes="(max-width: 639px) 100vw, (max-width: 1023px) 100vw, 1100px"
                     priority={index === 0}
-                    className="select-none object-contain"
+                    className="block h-full w-full select-none object-contain object-center"
                   />
                 </div>
               ))}
