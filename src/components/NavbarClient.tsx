@@ -21,6 +21,15 @@ const fakeDrawerCategory: Category = {
   created_at: null,
 };
 
+const fakeDrawerPlanchasCategory: Category = {
+  id: "fake-planchas-personalizadas-menu",
+  name: "Planchas personalizadas",
+  slug: "planchas-personalizadas",
+  image_url: "/planchapersonalizada.png",
+  sort_order: Number.MAX_SAFE_INTEGER,
+  created_at: null,
+};
+
 const NavbarClient = ({ categories }: NavbarClientProps) => {
   const pathname = usePathname();
   const items = useCartStore((state) => state.items);
@@ -29,10 +38,17 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
     [items]
   );
   const drawerCategories = useMemo(() => {
-    if (categories.some((category) => category.slug === "personalizados")) {
-      return categories;
+    const next = [...categories];
+
+    if (!next.some((category) => category.slug === "personalizados")) {
+      next.push(fakeDrawerCategory);
     }
-    return [...categories, fakeDrawerCategory];
+
+    if (!next.some((category) => category.slug === "planchas-personalizadas")) {
+      next.push(fakeDrawerPlanchasCategory);
+    }
+
+    return next;
   }, [categories]);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);

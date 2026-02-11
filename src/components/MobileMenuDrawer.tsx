@@ -70,6 +70,8 @@ const MobileMenuDrawer = ({
                 href={
                   category.id === "fake-personalizados-menu"
                     ? "/personalizados"
+                    : category.id === "fake-planchas-personalizadas-menu"
+                    ? "/planchas-personalizadas"
                     : `/c/${category.slug}`
                 }
                 className="block rounded-2xl border border-slate-100 px-4 py-3 text-lg font-medium text-slate-800 transition hover:-translate-x-1 hover:border-[var(--color-secondary)] hover:bg-[var(--color-secondary-light)]"

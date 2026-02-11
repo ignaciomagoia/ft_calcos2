@@ -25,9 +25,29 @@ const fakePersonalizedCategory = {
   sort_order: Number.MAX_SAFE_INTEGER,
 };
 
+const fakePlanchasPersonalizadasCategory = {
+  id: "fake-planchas-personalizadas",
+  name: "Planchas personalizadas",
+  slug: "planchas-personalizadas",
+  image_url: "/planchapersonalizada.png",
+  sort_order: Number.MAX_SAFE_INTEGER,
+};
+
+const getCategoryHref = (id: string, slug: string) => {
+  if (id === fakePersonalizedCategory.id) return "/personalizados";
+  if (id === fakePlanchasPersonalizadasCategory.id) {
+    return "/planchas-personalizadas";
+  }
+  return `/c/${slug}`;
+};
+
 export default async function HomePage() {
   const categories = await getCategories();
-  const categoriesWithFake = [...categories, fakePersonalizedCategory];
+  const categoriesWithFake = [
+    ...categories,
+    fakePersonalizedCategory,
+    fakePlanchasPersonalizadasCategory,
+  ];
 
   return (
     <div className="space-y-0">
@@ -48,11 +68,7 @@ export default async function HomePage() {
             {categoriesWithFake.map((category) => (
               <Link
                 key={category.id}
-                href={
-                  category.id === fakePersonalizedCategory.id
-                    ? "/personalizados"
-                    : `/c/${category.slug}`
-                }
+                href={getCategoryHref(category.id, category.slug)}
                 className="group flex h-[250px] flex-col overflow-hidden rounded-[26px] border border-[rgba(143,141,242,0.45)] bg-[var(--color-secondary)] px-3 pb-4 pt-3 shadow-[0_8px_18px_rgba(79,74,172,0.18)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(79,74,172,0.3)] sm:h-[280px]"
               >
                 <div className="relative flex min-h-0 flex-1 items-center justify-center">
