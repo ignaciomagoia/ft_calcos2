@@ -111,11 +111,11 @@ const PlanchasPersonalizadasConfigurator = () => {
   return (
     <>
       <section className="w-full bg-white py-4 sm:py-6">
-        <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full sm:max-w-6xl sm:px-6 lg:px-8">
           <div className="relative">
             <div
               ref={viewportRef}
-              className="no-scrollbar flex h-[240px] snap-x snap-mandatory overflow-x-auto overflow-y-hidden rounded-2xl touch-pan-y bg-white scroll-smooth sm:h-[330px] lg:h-[420px]"
+              className="no-scrollbar flex h-[240px] snap-x snap-mandatory overflow-x-auto overflow-y-hidden rounded-none touch-pan-x bg-white scroll-smooth sm:h-[330px] sm:rounded-2xl lg:h-[420px]"
               tabIndex={0}
               onKeyDown={onCarouselKeyDown}
               role="region"
@@ -165,7 +165,7 @@ const PlanchasPersonalizadasConfigurator = () => {
             </div>
           </div>
 
-          <div className="mt-3 flex items-center justify-center gap-2">
+          <div className="mt-3 hidden items-center justify-center gap-2 sm:flex">
             {infoSlides.map((slide, index) => (
               <button
                 key={slide.src}
