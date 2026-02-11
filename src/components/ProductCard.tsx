@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/lib/types";
 import { AddToCartButton } from "./AddToCartButton";
 import { buildImagePlaceholder, formatCurrency } from "@/lib/utils";
@@ -17,10 +17,12 @@ type Props = {
 export const ProductCard = ({ product }: Props) => {
   const image = product.image_url || buildImagePlaceholder(product.name);
   const [isOpen, setIsOpen] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedSizeCm, setSelectedSizeCm] = useState<ProductSizeCm | null>(
     null
   );
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sizeOptions = getProductSizeOptions(product);
   const hasSizes = sizeOptions.length > 0;
@@ -40,8 +42,30 @@ export const ProductCard = ({ product }: Props) => {
     setIsOpen(true);
   };
 
+  const handleAdded = () => {
+    setIsOpen(false);
+    setShowToast(true);
+
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+
+    toastTimeoutRef.current = setTimeout(() => {
+      setShowToast(false);
+      toastTimeoutRef.current = null;
+    }, 2400);
+  };
+
   const decrement = () => setQuantity((prev) => Math.max(prev - 1, 1));
   const increment = () => setQuantity((prev) => Math.min(prev + 1, 99));
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <>
@@ -162,8 +186,8 @@ export const ProductCard = ({ product }: Props) => {
                   sizeCm={selectedSizeCm}
                   quantity={quantity}
                   disabled={hasSizes && !selectedSizeCm}
-                  disabledLabel="Elegí tamaño"
-                  onAdded={() => setIsOpen(false)}
+                  disabledLabel={"Eleg\u00ed tama\u00f1o"}
+                  onAdded={handleAdded}
                 />
               </div>
             ) : (
@@ -176,6 +200,14 @@ export const ProductCard = ({ product }: Props) => {
                 Consultar por WhatsApp
               </a>
             )}
+          </div>
+        </div>
+      )}
+
+      {showToast && (
+        <div className="pointer-events-none fixed bottom-5 left-1/2 z-[60] -translate-x-1/2">
+          <div className="rounded-full border border-slate-200 bg-white/95 px-4 py-2 text-sm font-semibold text-[var(--color-primary)] shadow-lg backdrop-blur">
+            {"\u2705 Agregado al carrito"}
           </div>
         </div>
       )}
