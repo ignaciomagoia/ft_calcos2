@@ -2,11 +2,16 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import type { ProductSizeCm } from "./productPricing";
 
 export type CartItem = {
   id: string;
+  productId: string;
   name: string;
-  price: number;
+  unitPrice: number;
+  // Backward-compatible with persisted carts created before unitPrice.
+  price?: number;
+  sizeCm?: ProductSizeCm | null;
   imageUrl?: string | null;
   quantity: number;
 };

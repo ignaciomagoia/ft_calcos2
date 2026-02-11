@@ -21,9 +21,15 @@ type CategoryFormState = {
 type ProductFormState = {
   id?: string;
   name: string;
-  price: string;
   category_id: string;
   image_url: string;
+  legacy_price: number;
+  size_4_enabled: boolean;
+  size_4_price: string;
+  size_6_enabled: boolean;
+  size_6_price: string;
+  size_8_enabled: boolean;
+  size_8_price: string;
   file?: File | null;
 };
 
@@ -36,9 +42,15 @@ const emptyCategoryForm: CategoryFormState = {
 
 const createEmptyProductForm = (categoryId?: string): ProductFormState => ({
   name: "",
-  price: "",
   category_id: categoryId ?? "",
   image_url: "",
+  legacy_price: 0,
+  size_4_enabled: false,
+  size_4_price: "",
+  size_6_enabled: false,
+  size_6_price: "",
+  size_8_enabled: false,
+  size_8_price: "",
   file: null,
 });
 
@@ -63,6 +75,16 @@ const validateProductImageFile = (file: File | null | undefined): string | null 
   }
 
   return null;
+};
+
+const parseOptionalSizePrice = (
+  enabled: boolean,
+  rawValue: string
+): number | null => {
+  if (!enabled) return null;
+  const parsed = Number(rawValue);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return Math.round(parsed);
 };
 
 const getStoragePathsFromImageValue = (
@@ -316,6 +338,57 @@ export const AdminDashboard = ({
       return;
     }
 
+    const uniquePrice =
+      productForm.legacy_price > 0 ? Math.round(productForm.legacy_price) : 0;
+    const enabledSizeFlags = [
+      productForm.size_4_enabled,
+      productForm.size_6_enabled,
+      productForm.size_8_enabled,
+    ];
+    const hasAnyEnabledSize = enabledSizeFlags.some(Boolean);
+
+    const price4 = parseOptionalSizePrice(
+      productForm.size_4_enabled,
+      productForm.size_4_price
+    );
+    const price6 = parseOptionalSizePrice(
+      productForm.size_6_enabled,
+      productForm.size_6_price
+    );
+    const price8 = parseOptionalSizePrice(
+      productForm.size_8_enabled,
+      productForm.size_8_price
+    );
+
+    const invalidEnabledSizes: string[] = [];
+    if (productForm.size_4_enabled && price4 === null) invalidEnabledSizes.push("4 cm");
+    if (productForm.size_6_enabled && price6 === null) invalidEnabledSizes.push("6 cm");
+    if (productForm.size_8_enabled && price8 === null) invalidEnabledSizes.push("8 cm");
+
+    if (uniquePrice > 0 && hasAnyEnabledSize) {
+      setProductError(
+        "Elegi una sola modalidad de precio: unico o por tamaños."
+      );
+      setProductLoading(false);
+      return;
+    }
+
+    if (uniquePrice <= 0 && !hasAnyEnabledSize) {
+      setProductError(
+        "Cargá un precio unico o habilitá al menos un tamaño con precio."
+      );
+      setProductLoading(false);
+      return;
+    }
+
+    if (invalidEnabledSizes.length > 0) {
+      setProductError(
+        `Completá precio mayor a 0 para: ${invalidEnabledSizes.join(", ")}.`
+      );
+      setProductLoading(false);
+      return;
+    }
+
     let imageUrl = productForm.image_url;
 
     if (!imageUrl && !productForm.file) {
@@ -356,9 +429,17 @@ export const AdminDashboard = ({
       return;
     }
 
+    const sizePrices = [price4, price6, price8].filter(
+      (value): value is number => value !== null
+    );
+    const fallbackLegacyPrice = uniquePrice > 0 ? uniquePrice : sizePrices[0] ?? 0;
+
     const payload = {
       name: productForm.name,
-      price: Number(productForm.price),
+      price: fallbackLegacyPrice,
+      price_4: price4,
+      price_6: price6,
+      price_8: price8,
       category_id: productForm.category_id,
       image_url: imageUrl,
     };
@@ -413,9 +494,24 @@ export const AdminDashboard = ({
     setProductForm({
       id: product.id,
       name: product.name,
-      price: String(product.price),
       category_id: product.category_id,
       image_url: product.image_url ?? "",
+      legacy_price: product.price ?? 0,
+      size_4_enabled: typeof product.price_4 === "number" && product.price_4 > 0,
+      size_4_price:
+        typeof product.price_4 === "number" && product.price_4 > 0
+          ? String(product.price_4)
+          : "",
+      size_6_enabled: typeof product.price_6 === "number" && product.price_6 > 0,
+      size_6_price:
+        typeof product.price_6 === "number" && product.price_6 > 0
+          ? String(product.price_6)
+          : "",
+      size_8_enabled: typeof product.price_8 === "number" && product.price_8 > 0,
+      size_8_price:
+        typeof product.price_8 === "number" && product.price_8 > 0
+          ? String(product.price_8)
+          : "",
       file: null,
     });
     setProductMessage(null);
@@ -453,6 +549,30 @@ export const AdminDashboard = ({
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.reload();
+  };
+
+  const formatProductPriceSummary = (product: Product) => {
+    const chunks: string[] = [];
+
+    if (typeof product.price_4 === "number" && product.price_4 > 0) {
+      chunks.push(`4cm ${formatCurrency(product.price_4)}`);
+    }
+    if (typeof product.price_6 === "number" && product.price_6 > 0) {
+      chunks.push(`6cm ${formatCurrency(product.price_6)}`);
+    }
+    if (typeof product.price_8 === "number" && product.price_8 > 0) {
+      chunks.push(`8cm ${formatCurrency(product.price_8)}`);
+    }
+
+    if (chunks.length > 0) {
+      return chunks.join(" | ");
+    }
+
+    if (typeof product.price === "number" && product.price > 0) {
+      return formatCurrency(product.price);
+    }
+
+    return "Solo WhatsApp";
   };
 
   return (
@@ -627,19 +747,132 @@ export const AdminDashboard = ({
               }
               className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
             />
-            <input
-              type="number"
-              min="0"
-              placeholder="Precio en ARS"
-              value={productForm.price}
-              onChange={(event) =>
-                setProductForm((prev) => ({
-                  ...prev,
-                  price: event.target.value,
-                }))
-              }
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
-            />
+            <div className="rounded-2xl border border-slate-200 p-3">
+              <label className="block text-sm font-semibold text-slate-700">
+                Precio unico (sin tamaños)
+              </label>
+              <p className="mt-1 text-xs text-slate-500">
+                Usalo para productos sin selector de tamaño (ej: planchas
+                tematicas). No lo combines con precios por tamaño.
+              </p>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                inputMode="numeric"
+                placeholder="Precio en ARS"
+                value={productForm.legacy_price > 0 ? productForm.legacy_price : ""}
+                onChange={(event) =>
+                  setProductForm((prev) => ({
+                    ...prev,
+                    legacy_price:
+                      event.target.value === ""
+                        ? 0
+                        : Math.max(Number(event.target.value), 0),
+                  }))
+                }
+                className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+              />
+            </div>
+            <div className="rounded-2xl border border-slate-200 p-3">
+              <p className="text-sm font-semibold text-slate-700">
+                Tamaños opcionales con precio (ARS)
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Elegi esta modalidad solo si no cargaste precio unico.
+              </p>
+              <div className="mt-3 space-y-2">
+                <label className="grid grid-cols-[auto,1fr,120px] items-center gap-3 rounded-xl border border-slate-100 px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={productForm.size_4_enabled}
+                    onChange={(event) =>
+                      setProductForm((prev) => ({
+                        ...prev,
+                        size_4_enabled: event.target.checked,
+                      }))
+                    }
+                  />
+                  <span className="font-medium text-slate-700">4 cm</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputMode="numeric"
+                    placeholder="$"
+                    value={productForm.size_4_price}
+                    onChange={(event) =>
+                      setProductForm((prev) => ({
+                        ...prev,
+                        size_4_price: event.target.value,
+                      }))
+                    }
+                    disabled={!productForm.size_4_enabled}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100"
+                  />
+                </label>
+
+                <label className="grid grid-cols-[auto,1fr,120px] items-center gap-3 rounded-xl border border-slate-100 px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={productForm.size_6_enabled}
+                    onChange={(event) =>
+                      setProductForm((prev) => ({
+                        ...prev,
+                        size_6_enabled: event.target.checked,
+                      }))
+                    }
+                  />
+                  <span className="font-medium text-slate-700">6 cm</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputMode="numeric"
+                    placeholder="$"
+                    value={productForm.size_6_price}
+                    onChange={(event) =>
+                      setProductForm((prev) => ({
+                        ...prev,
+                        size_6_price: event.target.value,
+                      }))
+                    }
+                    disabled={!productForm.size_6_enabled}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100"
+                  />
+                </label>
+
+                <label className="grid grid-cols-[auto,1fr,120px] items-center gap-3 rounded-xl border border-slate-100 px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={productForm.size_8_enabled}
+                    onChange={(event) =>
+                      setProductForm((prev) => ({
+                        ...prev,
+                        size_8_enabled: event.target.checked,
+                      }))
+                    }
+                  />
+                  <span className="font-medium text-slate-700">8 cm</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputMode="numeric"
+                    placeholder="$"
+                    value={productForm.size_8_price}
+                    onChange={(event) =>
+                      setProductForm((prev) => ({
+                        ...prev,
+                        size_8_price: event.target.value,
+                      }))
+                    }
+                    disabled={!productForm.size_8_enabled}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100"
+                  />
+                </label>
+              </div>
+            </div>
             <select
               required
               value={productForm.category_id}
@@ -726,7 +959,7 @@ export const AdminDashboard = ({
                   <div className="flex items-center justify-between">
                     <p className="font-semibold">{product.name}</p>
                     <span className="text-slate-500">
-                      {formatCurrency(product.price)}
+                      {formatProductPriceSummary(product)}
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-xs font-semibold">
@@ -752,3 +985,4 @@ export const AdminDashboard = ({
     </div>
   );
 };
+

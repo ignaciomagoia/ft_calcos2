@@ -5,7 +5,7 @@ import { ProductDetail } from "@/components/ProductDetail";
 import { getProductWithCategory } from "@/lib/data";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,8 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({
   params,
 }: Props): Promise<Metadata> {
-  const product = await getProductWithCategory(params.id);
+  const { id } = await params;
+  const product = await getProductWithCategory(id);
   if (!product) {
     return { title: "Producto no encontrado" };
   }
@@ -25,7 +26,8 @@ export async function generateMetadata({
 }
 
 export default async function ProductPage({ params }: Props) {
-  const product = await getProductWithCategory(params.id);
+  const { id } = await params;
+  const product = await getProductWithCategory(id);
 
   if (!product) {
     notFound();

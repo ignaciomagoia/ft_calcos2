@@ -10,7 +10,10 @@ export type Category = {
 export type Product = {
   id: string;
   name: string;
-  price: number;
+  price: number | null;
+  price_4?: number | null;
+  price_6?: number | null;
+  price_8?: number | null;
   category_id: string;
   image_url: string | null;
   created_at?: string | null;

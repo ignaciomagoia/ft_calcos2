@@ -16,11 +16,19 @@ create table if not exists public.products (
   id uuid primary key default uuid_generate_v4(),
   name text not null,
   price int not null,
+  price_4 int,
+  price_6 int,
+  price_8 int,
   category_id uuid references public.categories (id) on delete set null,
   image_url text,
   active boolean default true,
   created_at timestamptz default now()
 );
+
+alter table public.products
+  add column if not exists price_4 int,
+  add column if not exists price_6 int,
+  add column if not exists price_8 int;
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,

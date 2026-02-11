@@ -3,12 +3,17 @@
 import { useState, useTransition } from "react";
 import { useCartStore } from "@/lib/cartStore";
 import type { Product } from "@/lib/types";
+import type { ProductSizeCm } from "@/lib/productPricing";
 
 type Props = {
-  product: Pick<Product, "id" | "name" | "price" | "image_url">;
+  product: Pick<Product, "id" | "name" | "image_url">;
+  unitPrice: number;
+  sizeCm?: ProductSizeCm | null;
   quantity?: number;
   variant?: "primary" | "secondary";
   fullWidth?: boolean;
+  disabled?: boolean;
+  disabledLabel?: string;
 };
 
 const baseStyles =
@@ -23,21 +28,31 @@ const variants: Record<string, string> = {
 
 export const AddToCartButton = ({
   product,
+  unitPrice,
+  sizeCm = null,
   quantity = 1,
   variant = "primary",
   fullWidth = true,
+  disabled = false,
+  disabledLabel = "Elegí una opción",
 }: Props) => {
   const addItem = useCartStore((state) => state.addItem);
   const [added, setAdded] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const handleAdd = () => {
+    if (disabled) return;
+
     startTransition(() => {
+      const lineId = `${product.id}:${sizeCm ?? "base"}:${unitPrice}`;
       addItem(
         {
-          id: product.id,
+          id: lineId,
+          productId: product.id,
           name: product.name,
-          price: product.price,
+          unitPrice,
+          price: unitPrice,
+          sizeCm,
           imageUrl: product.image_url,
         },
         quantity
@@ -54,9 +69,9 @@ export const AddToCartButton = ({
       className={`${baseStyles} ${variants[variant]} ${
         fullWidth ? "w-full" : ""
       }`}
-      disabled={isPending}
+      disabled={isPending || disabled}
     >
-      {added ? "Agregado" : "Agregar"}
+      {added ? "Agregado" : disabled ? disabledLabel : "Agregar"}
     </button>
   );
 };

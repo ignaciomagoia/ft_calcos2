@@ -13,9 +13,15 @@ export default function CartPage() {
   const removeItem = useCartStore((state) => state.removeItem);
   const setQty = useCartStore((state) => state.setQty);
   const clear = useCartStore((state) => state.clear);
+  const getUnitPrice = (item: (typeof items)[number]) =>
+    item.unitPrice ?? item.price ?? 0;
 
   const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    () =>
+      items.reduce(
+        (sum, item) => sum + getUnitPrice(item) * item.quantity,
+        0
+      ),
     [items]
   );
 
@@ -71,9 +77,17 @@ export default function CartPage() {
                       {item.name}
                     </h3>
                     <p className="text-base font-semibold text-slate-700">
-                      {formatCurrency(item.price * item.quantity)}
+                      {formatCurrency(getUnitPrice(item) * item.quantity)}
                     </p>
                   </div>
+                  {item.sizeCm && (
+                    <p className="text-xs font-medium text-slate-500">
+                      Tamano: {item.sizeCm} cm
+                    </p>
+                  )}
+                  <p className="text-xs text-slate-500">
+                    Unitario: {formatCurrency(getUnitPrice(item))}
+                  </p>
 
                   <div className="flex flex-wrap items-center gap-3 text-sm">
                     <div className="inline-flex items-center gap-3 rounded-full border border-slate-200 px-3 py-1">

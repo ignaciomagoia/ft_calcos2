@@ -55,7 +55,7 @@ export default async function CategoryPage({ params }: Props) {
           No hay productos activos en esta categoría.
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-5">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-6 lg:gap-5">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

@@ -19,10 +19,17 @@ export const buildWhatsAppCheckoutUrl = ({
   const lines = [
     "Hola! Quiero confirmar mi pedido:",
     ...items.map(
-      (item) =>
-        `${item.quantity} x ${item.name} - ${formatCurrency(
-          item.price * item.quantity
-        )}`
+      (item) => {
+        const unitPrice = item.unitPrice ?? item.price ?? 0;
+        const itemTotal = unitPrice * item.quantity;
+        const sizePart = item.sizeCm ? ` | Tamano: ${item.sizeCm} cm` : "";
+
+        return `${item.name}${sizePart} | Cantidad: ${
+          item.quantity
+        } | Precio unitario: ${formatCurrency(unitPrice)} | Total: ${formatCurrency(
+          itemTotal
+        )}`;
+      }
     ),
     `Total: ${formatCurrency(total)}`,
     "Pago por transferencia, coordinamos por WhatsApp.",
