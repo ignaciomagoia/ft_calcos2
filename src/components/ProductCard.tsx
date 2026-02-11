@@ -163,6 +163,7 @@ export const ProductCard = ({ product }: Props) => {
                   quantity={quantity}
                   disabled={hasSizes && !selectedSizeCm}
                   disabledLabel="Elegí tamaño"
+                  onAdded={() => setIsOpen(false)}
                 />
               </div>
             ) : (
@@ -181,4 +182,3 @@ export const ProductCard = ({ product }: Props) => {
     </>
   );
 };
-

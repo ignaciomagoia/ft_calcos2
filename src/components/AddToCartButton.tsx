@@ -14,6 +14,7 @@ type Props = {
   fullWidth?: boolean;
   disabled?: boolean;
   disabledLabel?: string;
+  onAdded?: () => void;
 };
 
 const baseStyles =
@@ -35,6 +36,7 @@ export const AddToCartButton = ({
   fullWidth = true,
   disabled = false,
   disabledLabel = "Elegí una opción",
+  onAdded,
 }: Props) => {
   const addItem = useCartStore((state) => state.addItem);
   const [added, setAdded] = useState(false);
@@ -57,6 +59,7 @@ export const AddToCartButton = ({
         },
         quantity
       );
+      onAdded?.();
       setAdded(true);
       setTimeout(() => setAdded(false), 1500);
     });
