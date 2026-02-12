@@ -72,18 +72,18 @@ const vinylOptions = [
   },
   {
     value: "transparente",
-    label: "Transparente (sin laca UV)",
+    label: "Transparente",
     priceGroup: "sin_laca",
   },
   {
     value: "holografico",
-    label: "Holográfico (sin laca UV)",
-    priceGroup: "sin_laca",
+    label: "Holográfico",
+    priceGroup: "con_laca",
   },
   {
     value: "dorado",
-    label: "Dorado (sin laca UV)",
-    priceGroup: "sin_laca",
+    label: "Dorado",
+    priceGroup: "con_laca",
   },
 ] as const;
 
@@ -172,7 +172,7 @@ const PersonalizedMayorConfigurator = () => {
               href="/"
               className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Volver al catálogo
+              Volver al inicio
             </Link>
           </div>
         </div>
@@ -289,7 +289,7 @@ const PersonalizedMayorConfigurator = () => {
                   href="/"
                   className="inline-flex items-center justify-center rounded-full border border-slate-300 px-8 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
-                  Volver al catálogo
+                  Volver al inicio
                 </Link>
               </div>
             </form>

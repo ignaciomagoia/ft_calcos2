@@ -7,7 +7,7 @@ import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 const WA_NUMBER = "3516183951";
 const infoSlides = [
   {
-    src: "/infoplanchapersonalizada.png",
+    src: "/infoplanchapersonalizada3.png",
     alt: "Informacion de planchas personalizadas 1",
   },
   {
@@ -15,7 +15,7 @@ const infoSlides = [
     alt: "Informacion de planchas personalizadas 2",
   },
   {
-    src: "/infoplanchapersonalizada3.png",
+    src: "/infoplanchapersonalizada.png",
     alt: "Informacion de planchas personalizadas 3",
   },
 ] as const;
@@ -188,7 +188,7 @@ const PlanchasPersonalizadasConfigurator = () => {
               href="/"
               className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Volver al catálogo
+              Volver al inicio
             </Link>
           </div>
         </div>
@@ -287,7 +287,7 @@ const PlanchasPersonalizadasConfigurator = () => {
                   href="/"
                   className="inline-flex items-center justify-center rounded-full border border-slate-300 px-8 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
-                  Volver al catálogo
+                  Volver al inicio
                 </Link>
               </div>
             </form>
