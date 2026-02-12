@@ -1,8 +1,5 @@
 import Image from "next/image";
-
-const WHOLESALE_MESSAGE = encodeURIComponent(
-  "Hola! Quiero pedir cotización por calcos personalizados por mayor. Mi marca es __, cantidad __, tamaño __, vinilo __."
-);
+import Link from "next/link";
 
 const bullets = [
   "Vinilo premium",
@@ -14,7 +11,7 @@ const bullets = [
 const WholesalePersonalizedSection = () => {
   return (
     <section className="w-full bg-[var(--color-secondary)]/10">
-      <div className="mx-auto max-w-6xl px-4 pt-6 pb-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl px-4 pb-4 pt-6 sm:px-6 lg:px-8">
         <div className="card grid gap-10 rounded-[32px] p-8 lg:grid-cols-2 lg:p-10">
           <div className="space-y-6">
             <div className="space-y-3">
@@ -25,9 +22,8 @@ const WholesalePersonalizedSection = () => {
                 Calcos personalizados para potenciar tu marca o emprendimiento
               </h3>
               <p className="text-base text-slate-600">
-                Hacemos calcos pensados para tu marca: buena calidad, excelente
-                terminación y tiradas chicas posibles. Ideal para packaging,
-                promos y regalos de marca.
+                Hacemos calcos pensados para tu marca: buena calidad, excelente terminación y
+                tiradas chicas posibles. Ideal para packaging, promos y regalos de marca.
               </p>
             </div>
 
@@ -42,21 +38,19 @@ const WholesalePersonalizedSection = () => {
               ))}
             </ul>
 
-            <a
-              href={`https://wa.me/5493516183951?text=${WHOLESALE_MESSAGE}`}
+            <Link
+              href="/personalizadas-por-mayor"
               className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 !text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
-              target="_blank"
-              rel="noopener noreferrer"
             >
-              Pedir cotización por WhatsApp
-            </a>
+              Ver cotización
+            </Link>
           </div>
 
           <div className="flex items-center justify-center">
             <div className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-slate-100 bg-white shadow-xl">
               <Image
                 src="/personalizadasmarca.png"
-                alt="Placeholder para personalizados por mayor"
+                alt="Calcos personalizados por mayor"
                 width={640}
                 height={640}
                 className="h-full w-full object-cover"
