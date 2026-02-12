@@ -30,6 +30,15 @@ const fakeDrawerPlanchasCategory: Category = {
   created_at: null,
 };
 
+const fakeDrawerPersonalizadasMayorCategory: Category = {
+  id: "fake-personalizadas-por-mayor-menu",
+  name: "Personalizadas por mayor",
+  slug: "personalizadas-por-mayor",
+  image_url: "/personalizadasmarca.png",
+  sort_order: Number.MAX_SAFE_INTEGER,
+  created_at: null,
+};
+
 const NavbarClient = ({ categories }: NavbarClientProps) => {
   const pathname = usePathname();
   const items = useCartStore((state) => state.items);
@@ -46,6 +55,10 @@ const NavbarClient = ({ categories }: NavbarClientProps) => {
 
     if (!next.some((category) => category.slug === "planchas-personalizadas")) {
       next.push(fakeDrawerPlanchasCategory);
+    }
+
+    if (!next.some((category) => category.slug === "personalizadas-por-mayor")) {
+      next.push(fakeDrawerPersonalizadasMayorCategory);
     }
 
     return next;

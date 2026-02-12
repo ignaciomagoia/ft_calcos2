@@ -33,10 +33,21 @@ const fakePlanchasPersonalizadasCategory = {
   sort_order: Number.MAX_SAFE_INTEGER,
 };
 
+const fakePersonalizadasMayorCategory = {
+  id: "fake-personalizadas-por-mayor",
+  name: "Personalizadas por mayor",
+  slug: "personalizadas-por-mayor",
+  image_url: "/personalizadasmarca.png",
+  sort_order: Number.MAX_SAFE_INTEGER,
+};
+
 const getCategoryHref = (id: string, slug: string) => {
   if (id === fakePersonalizedCategory.id) return "/personalizados";
   if (id === fakePlanchasPersonalizadasCategory.id) {
     return "/planchas-personalizadas";
+  }
+  if (id === fakePersonalizadasMayorCategory.id) {
+    return "/personalizadas-por-mayor";
   }
   return `/c/${slug}`;
 };
@@ -47,6 +58,7 @@ export default async function HomePage() {
     ...categories,
     fakePersonalizedCategory,
     fakePlanchasPersonalizadasCategory,
+    fakePersonalizadasMayorCategory,
   ];
 
   return (
