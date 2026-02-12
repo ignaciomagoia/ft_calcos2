@@ -263,7 +263,7 @@ const HeroCarousel = () => {
         </button>
       </div>
 
-      <div className="absolute bottom-4 left-1/2 hidden -translate-x-1/2 gap-2 sm:flex lg:bottom-6">
+      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 lg:bottom-6">
         {slides.map((slide, index) => (
           <button
             key={slide.id}

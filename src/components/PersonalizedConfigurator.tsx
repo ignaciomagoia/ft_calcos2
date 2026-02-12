@@ -13,11 +13,11 @@ const ICON_NUMBERS = String.fromCodePoint(0x1f522);
 const ICON_CHECK = String.fromCodePoint(0x2705);
 const infoSlides = [
   {
-    src: "/personalizadas1.png",
+    src: "/personalizadas2.png",
     alt: "Informacion de personalizados 1",
   },
   {
-    src: "/personalizadas2.png",
+    src: "/personalizadas1.png",
     alt: "Informacion de personalizados 2",
   },
 ] as const;
@@ -182,7 +182,7 @@ const PersonalizedConfigurator = () => {
             </div>
           </div>
 
-          <div className="mt-3 hidden items-center justify-center gap-2 sm:flex">
+          <div className="mt-3 flex items-center justify-center gap-2">
             {infoSlides.map((slide, index) => (
               <button
                 key={slide.src}

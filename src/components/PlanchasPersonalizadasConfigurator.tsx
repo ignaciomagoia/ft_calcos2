@@ -166,7 +166,7 @@ const PlanchasPersonalizadasConfigurator = () => {
             </div>
           </div>
 
-          <div className="mt-3 hidden items-center justify-center gap-2 sm:flex">
+          <div className="mt-3 flex items-center justify-center gap-2">
             {infoSlides.map((slide, index) => (
               <button
                 key={slide.src}
