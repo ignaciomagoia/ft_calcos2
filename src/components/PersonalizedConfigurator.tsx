@@ -38,6 +38,12 @@ const vinylOptions = [
 type SizeValue = (typeof sizeOptions)[number];
 type BackgroundValue = (typeof backgroundOptions)[number]["value"];
 type VinylValue = (typeof vinylOptions)[number]["value"];
+const MIN_QTY_SPECIAL_VINYL = 20;
+const specialVinylsWithMinQty: VinylValue[] = [
+  "holográfico",
+  "dorado",
+  "transparente",
+];
 
 const PersonalizedConfigurator = () => {
   const [size, setSize] = useState<SizeValue | "">("");
@@ -49,6 +55,10 @@ const PersonalizedConfigurator = () => {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const slideRefs = useRef<Array<HTMLDivElement | null>>([]);
   const totalSlides = infoSlides.length;
+  const minQuantity =
+    vinyl && specialVinylsWithMinQty.includes(vinyl)
+      ? MIN_QTY_SPECIAL_VINYL
+      : 1;
 
   const clampSlideIndex = (index: number) =>
     (index + totalSlides) % totalSlides;
@@ -92,16 +102,26 @@ const PersonalizedConfigurator = () => {
     }
   };
 
+  useEffect(() => {
+    if (quantity < minQuantity) {
+      setQuantity(minQuantity);
+    }
+  }, [minQuantity, quantity]);
+
   const updateQuantity = (nextValue: number) => {
     if (Number.isNaN(nextValue)) return;
-    setQuantity(Math.min(999, Math.max(1, Math.floor(nextValue))));
+    setQuantity(Math.min(999, Math.max(minQuantity, Math.floor(nextValue))));
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!size || !background || !vinyl || quantity < 1) {
-      setError("Elegí tamaño, fondo, vinilo y cantidad mínima 1.");
+    if (!size || !background || !vinyl || quantity < minQuantity) {
+      setError(
+        minQuantity > 1
+          ? `Para ${vinyl}, la cantidad mínima es ${MIN_QTY_SPECIAL_VINYL}.`
+          : "Elegí tamaño, fondo, vinilo y cantidad mínima 1."
+      );
       return;
     }
 
@@ -315,6 +335,12 @@ const PersonalizedConfigurator = () => {
                 >
                   Cantidad
                 </label>
+                {minQuantity > 1 ? (
+                  <p className="text-xs text-slate-500">
+                    Para holográfico, dorado o transparente el mínimo es{" "}
+                    {MIN_QTY_SPECIAL_VINYL} unidades.
+                  </p>
+                ) : null}
                 <div className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-2">
                   <button
                     type="button"
@@ -327,7 +353,7 @@ const PersonalizedConfigurator = () => {
                   <input
                     id="quantity"
                     type="number"
-                    min={1}
+                    min={minQuantity}
                     value={quantity}
                     onChange={(event) =>
                       updateQuantity(Number(event.target.value))
