@@ -48,7 +48,7 @@ export const getProductsByCategoryId = async (
     .from("products")
     .select("*")
     .eq("category_id", categoryId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   if (error) {
     console.error("Error fetching products", error);
