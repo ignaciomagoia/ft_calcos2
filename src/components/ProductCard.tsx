@@ -185,25 +185,31 @@ export const ProductCard = ({ product }: Props) => {
                   </button>
                 </div>
 
-                <AddToCartButton
-                  product={product}
-                  unitPrice={unitPrice ?? 0}
-                  sizeCm={selectedSizeCm}
-                  quantity={quantity}
-                  disabled={hasSizes && !selectedSizeCm}
-                  disabledLabel={"Eleg\u00ed tama\u00f1o"}
-                  onDisabledClick={() => {
-                    if (hasSizes && !selectedSizeCm) {
-                      setSelectionError("Elegí un tamaño para continuar.");
-                    }
-                  }}
-                  onAdded={handleAdded}
-                />
-                {selectionError ? (
+                {hasSizes && !selectedSizeCm && selectionError ? (
                   <p className="text-center text-xs font-medium text-rose-600">
                     {selectionError}
                   </p>
                 ) : null}
+
+                {hasSizes && !selectedSizeCm ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectionError("Eleg\u00ed un tama\u00f1o para continuar.")
+                    }
+                    className="inline-flex w-full items-center justify-center rounded-full bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-dark)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+                  >
+                    Agregar
+                  </button>
+                ) : (
+                  <AddToCartButton
+                    product={product}
+                    unitPrice={unitPrice ?? 0}
+                    sizeCm={selectedSizeCm}
+                    quantity={quantity}
+                    onAdded={handleAdded}
+                  />
+                )}
               </div>
             ) : (
               <a

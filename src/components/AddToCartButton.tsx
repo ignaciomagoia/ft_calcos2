@@ -36,7 +36,7 @@ export const AddToCartButton = ({
   variant = "primary",
   fullWidth = true,
   disabled = false,
-  disabledLabel = "Elegí una opción",
+  disabledLabel = "Eleg\u00ed una opci\u00f3n",
   onAdded,
   onDisabledClick,
 }: Props) => {

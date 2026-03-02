@@ -19,6 +19,7 @@ export const ProductDetail = ({ product }: Props) => {
   const [selectedSizeCm, setSelectedSizeCm] = useState<ProductSizeCm | null>(
     null
   );
+  const [selectionError, setSelectionError] = useState("");
 
   const image = product.image_url || buildImagePlaceholder(product.name);
   const sizeOptions = useMemo(() => getProductSizeOptions(product), [product]);
@@ -32,12 +33,13 @@ export const ProductDetail = ({ product }: Props) => {
     : legacyPrice;
 
   const consultUrl = `https://wa.me/5493516183951?text=${encodeURIComponent(
-    `Hola! Quiero consultar por ${product.name}. Falta enviar la foto/diseno si corresponde.`
+    `Hola! Quiero consultar por ${product.name}.`
   )}`;
 
   useEffect(() => {
     setQuantity(1);
     setSelectedSizeCm(null);
+    setSelectionError("");
   }, [product.id]);
 
   const decrease = () => setQuantity((qty) => Math.max(qty - 1, 1));
@@ -65,7 +67,7 @@ export const ProductDetail = ({ product }: Props) => {
             {unitPrice
               ? formatCurrency(unitPrice)
               : hasSizeOptions
-              ? "Elegí un tamaño"
+              ? "Eleg\u00ed un tama\u00f1o"
               : "Precio a coordinar"}
           </p>
           {unitPrice && quantity > 1 && (
@@ -77,7 +79,9 @@ export const ProductDetail = ({ product }: Props) => {
 
         {hasSizeOptions && (
           <div className="space-y-3">
-            <p className="text-sm font-medium text-slate-500">Elegí el tamaño</p>
+            <p className="text-sm font-medium text-slate-500">
+              {"Eleg\u00ed el tama\u00f1o"}
+            </p>
             <div className="grid gap-2 sm:grid-cols-3">
               {sizeOptions.map((option) => (
                 <label
@@ -95,12 +99,18 @@ export const ProductDetail = ({ product }: Props) => {
                     name="size-cm"
                     value={option.sizeCm}
                     checked={selectedSizeCm === option.sizeCm}
-                    onChange={() => setSelectedSizeCm(option.sizeCm)}
+                    onChange={() => {
+                      setSelectedSizeCm(option.sizeCm);
+                      setSelectionError("");
+                    }}
                     className="sr-only"
                   />
                 </label>
               ))}
             </div>
+            {selectionError ? (
+              <p className="text-xs font-medium text-rose-600">{selectionError}</p>
+            ) : null}
           </div>
         )}
 
@@ -134,7 +144,10 @@ export const ProductDetail = ({ product }: Props) => {
             sizeCm={selectedSizeCm}
             quantity={quantity}
             disabled={hasSizeOptions && !selectedSizeCm}
-            disabledLabel="Elegí tamaño"
+            disabledLabel="Eleg\u00ed tama\u00f1o"
+            onDisabledClick={() =>
+              setSelectionError("Eleg\u00ed un tama\u00f1o para continuar.")
+            }
           />
         ) : (
           <a
@@ -148,7 +161,7 @@ export const ProductDetail = ({ product }: Props) => {
         )}
 
         <p className="text-sm text-slate-500">
-          Pago por transferencia bancaria. Envios coordinados por WhatsApp.
+          {"Pago por transferencia bancaria. Env\u00edos coordinados por WhatsApp."}
         </p>
       </div>
     </div>

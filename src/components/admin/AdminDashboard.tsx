@@ -93,7 +93,7 @@ const validateProductImageFile = (file: File | null | undefined): string | null 
   if (file.size > MAX_PRODUCT_IMAGE_BYTES) {
     const fileSizeKb = Math.round(file.size / 1024);
     const maxSizeKb = Math.round(MAX_PRODUCT_IMAGE_BYTES / 1024);
-    return `La imagen pesa ${fileSizeKb} KB. Maximo permitido: ${maxSizeKb} KB. Reducila y proba de nuevo.`;
+    return `La imagen pesa ${fileSizeKb} KB. M\u00e1ximo permitido: ${maxSizeKb} KB. Reducila y prob\u00e1 de nuevo.`;
   }
 
   return null;
@@ -336,7 +336,7 @@ export const AdminDashboard = ({
     sharedPricing: SharedPricePayload
   ) => {
     if (!bulkCategoryId) {
-      setProductError("Selecciona una categoria para la carga masiva.");
+      setProductError("Seleccion\u00e1 una categor\u00eda para la carga masiva.");
       return;
     }
 
@@ -564,7 +564,7 @@ export const AdminDashboard = ({
 
     const trimmedName = categoryForm.name.trim();
     if (!trimmedName) {
-      setCategoryMessage("Ingresa un nombre valido.");
+      setCategoryMessage("Ingres\u00e1 un nombre v\u00e1lido.");
       setCategoryLoading(false);
       return;
     }
@@ -642,7 +642,7 @@ export const AdminDashboard = ({
 
   const handleDeleteCategory = async (id: string) => {
     const confirmed = window.confirm(
-      "¿Eliminar la categoria? Los productos asociados quedaran huerfanos."
+      "\u00bfEliminar la categor\u00eda? Los productos asociados quedar\u00e1n hu\u00e9rfanos."
     );
     if (!confirmed) return;
 
@@ -652,7 +652,7 @@ export const AdminDashboard = ({
       setCategoryMessage(error.message);
     } else {
       setCategories((prev) => prev.filter((cat) => cat.id !== id));
-      setCategoryMessage("Categoria eliminada.");
+      setCategoryMessage("Categor\u00eda eliminada.");
     }
   };
 
@@ -874,7 +874,7 @@ export const AdminDashboard = ({
           onClick={handleLogout}
           className="rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
         >
-          Cerrar sesion
+          {"Cerrar sesi\u00f3n"}
         </button>
       </header>
 
@@ -929,7 +929,7 @@ export const AdminDashboard = ({
               className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
             />
             <label className="text-sm font-medium text-slate-600">
-              Subir imagen de categoria (opcional)
+              {"Subir imagen de categor\u00eda (opcional)"}
               <input
                 type="file"
                 accept="image/*"
@@ -959,7 +959,7 @@ export const AdminDashboard = ({
           <h3 className="text-lg font-semibold text-slate-900">Listado</h3>
           <div className="mt-4 space-y-3 text-sm">
             {categories.length === 0 ? (
-              <p className="text-slate-500">Sin categorias.</p>
+              <p className="text-slate-500">{"Sin categor\u00edas."}</p>
             ) : (
               categories.map((category) => (
                 <div
@@ -1036,11 +1036,11 @@ export const AdminDashboard = ({
             />
             <div className="rounded-2xl border border-slate-200 p-3">
               <label className="block text-sm font-semibold text-slate-700">
-                Precio unico (sin tamanos)
+                {"Precio \u00fanico (sin tama\u00f1os)"}
               </label>
               <p className="mt-1 text-xs text-slate-500">
-                Usalo para productos sin selector de tamano (ej: planchas
-                tematicas). No lo combines con precios por tamano.
+                {"Usalo para productos sin selector de tama\u00f1o (ej: planchas"}
+                {" tem\u00e1ticas). No lo combines con precios por tama\u00f1o."}
               </p>
               <input
                 type="number"
@@ -1063,10 +1063,10 @@ export const AdminDashboard = ({
             </div>
             <div className="rounded-2xl border border-slate-200 p-3">
               <p className="text-sm font-semibold text-slate-700">
-                Tamanos opcionales con precio (ARS)
+                {"Tama\u00f1os opcionales con precio (ARS)"}
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                Elegi esta modalidad solo si no cargaste precio unico.
+                {"Eleg\u00ed esta modalidad solo si no cargaste precio \u00fanico."}
               </p>
               <div className="mt-3 space-y-2">
                 <label className="grid grid-cols-[auto,1fr,120px] items-center gap-3 rounded-xl border border-slate-100 px-3 py-2 text-sm">
@@ -1171,7 +1171,7 @@ export const AdminDashboard = ({
               }
               className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
             >
-              <option value="">Selecciona categoria</option>
+              <option value="">{`Seleccion\u00e1 categor\u00eda`}</option>
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
