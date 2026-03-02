@@ -15,6 +15,7 @@ type Props = {
   disabled?: boolean;
   disabledLabel?: string;
   onAdded?: () => void;
+  onDisabledClick?: () => void;
 };
 
 const baseStyles =
@@ -37,13 +38,17 @@ export const AddToCartButton = ({
   disabled = false,
   disabledLabel = "Elegí una opción",
   onAdded,
+  onDisabledClick,
 }: Props) => {
   const addItem = useCartStore((state) => state.addItem);
   const [added, setAdded] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const handleAdd = () => {
-    if (disabled) return;
+    if (disabled) {
+      onDisabledClick?.();
+      return;
+    }
 
     startTransition(() => {
       const lineId = `${product.id}:${sizeCm ?? "base"}:${unitPrice}`;
@@ -72,7 +77,8 @@ export const AddToCartButton = ({
       className={`${baseStyles} ${variants[variant]} ${
         fullWidth ? "w-full" : ""
       }`}
-      disabled={isPending || disabled}
+      disabled={isPending}
+      aria-disabled={disabled || isPending}
     >
       {added ? "Agregado" : disabled ? disabledLabel : "Agregar"}
     </button>

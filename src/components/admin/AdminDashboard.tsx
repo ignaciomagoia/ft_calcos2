@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { Category, Product } from "@/lib/types";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { formatCurrency, slugify } from "@/lib/utils";
@@ -60,18 +60,40 @@ const ALLOWED_PRODUCT_IMAGE_TYPES = [
   "image/png",
   "image/webp",
 ];
+const BULK_UPLOAD_CONCURRENCY = 8;
+
+type BulkUploadStatus =
+  | "pending"
+  | "uploading"
+  | "success"
+  | "error"
+  | "invalid"
+  | "cancelled";
+
+type BulkUploadItem = {
+  id: string;
+  file: File;
+  name: string;
+  status: BulkUploadStatus;
+  message?: string;
+};
+
+const getBaseNameFromFile = (fileName: string) => {
+  const baseName = fileName.replace(/\.[^/.]+$/, "").trim();
+  return baseName || "calco";
+};
 
 const validateProductImageFile = (file: File | null | undefined): string | null => {
   if (!file) return null;
 
   if (!ALLOWED_PRODUCT_IMAGE_TYPES.includes(file.type)) {
-    return "Formato no permitido. Usá JPG, PNG o WebP.";
+    return "Formato no permitido. Usa JPG, PNG o WebP.";
   }
 
   if (file.size > MAX_PRODUCT_IMAGE_BYTES) {
     const fileSizeKb = Math.round(file.size / 1024);
     const maxSizeKb = Math.round(MAX_PRODUCT_IMAGE_BYTES / 1024);
-    return `La imagen pesa ${fileSizeKb} KB. Máximo permitido: ${maxSizeKb} KB. Reducila y probá de nuevo.`;
+    return `La imagen pesa ${fileSizeKb} KB. Maximo permitido: ${maxSizeKb} KB. Reducila y proba de nuevo.`;
   }
 
   return null;
@@ -85,6 +107,71 @@ const parseOptionalSizePrice = (
   const parsed = Number(rawValue);
   if (!Number.isFinite(parsed) || parsed <= 0) return null;
   return Math.round(parsed);
+};
+
+type SharedPricePayload = {
+  price: number;
+  price_4: number | null;
+  price_6: number | null;
+  price_8: number | null;
+};
+
+const getSharedPricePayload = (
+  form: ProductFormState
+): { payload: SharedPricePayload | null; error: string | null } => {
+  const uniquePrice = form.legacy_price > 0 ? Math.round(form.legacy_price) : 0;
+
+  const enabledSizeFlags = [
+    form.size_4_enabled,
+    form.size_6_enabled,
+    form.size_8_enabled,
+  ];
+  const hasAnyEnabledSize = enabledSizeFlags.some(Boolean);
+
+  const price4 = parseOptionalSizePrice(form.size_4_enabled, form.size_4_price);
+  const price6 = parseOptionalSizePrice(form.size_6_enabled, form.size_6_price);
+  const price8 = parseOptionalSizePrice(form.size_8_enabled, form.size_8_price);
+
+  const invalidEnabledSizes: string[] = [];
+  if (form.size_4_enabled && price4 === null) invalidEnabledSizes.push("4 cm");
+  if (form.size_6_enabled && price6 === null) invalidEnabledSizes.push("6 cm");
+  if (form.size_8_enabled && price8 === null) invalidEnabledSizes.push("8 cm");
+
+  if (uniquePrice > 0 && hasAnyEnabledSize) {
+    return {
+      payload: null,
+      error: "Elegí una sola modalidad de precio: único o por tamaños.",
+    };
+  }
+
+  if (uniquePrice <= 0 && !hasAnyEnabledSize) {
+    return {
+      payload: null,
+      error: "Cargá un precio único o habilitá al menos un tamaño con precio.",
+    };
+  }
+
+  if (invalidEnabledSizes.length > 0) {
+    return {
+      payload: null,
+      error: `Completá precio mayor a 0 para: ${invalidEnabledSizes.join(", ")}.`,
+    };
+  }
+
+  const sizePrices = [price4, price6, price8].filter(
+    (value): value is number => value !== null
+  );
+  const fallbackLegacyPrice = uniquePrice > 0 ? uniquePrice : sizePrices[0] ?? 0;
+
+  return {
+    payload: {
+      price: fallbackLegacyPrice,
+      price_4: price4,
+      price_6: price6,
+      price_8: price8,
+    },
+    error: null,
+  };
 };
 
 const getStoragePathsFromImageValue = (
@@ -179,6 +266,14 @@ export const AdminDashboard = ({
   const [productLoading, setProductLoading] = useState(false);
   const [productMessage, setProductMessage] = useState<string | null>(null);
   const [productError, setProductError] = useState<string | null>(null);
+  const [bulkCategoryId, setBulkCategoryId] = useState(
+    initialCategories[0]?.id ?? ""
+  );
+  const [bulkItems, setBulkItems] = useState<BulkUploadItem[]>([]);
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkCancelRequested, setBulkCancelRequested] = useState(false);
+  const bulkCancelRef = useRef(false);
+  const bulkItemsRef = useRef<BulkUploadItem[]>([]);
   const filteredAndSortedProducts = useMemo(() => {
     const filtered =
       selectedCategoryId === "all"
@@ -189,6 +284,247 @@ export const AdminDashboard = ({
       a.name.localeCompare(b.name, "es", { sensitivity: "base" })
     );
   }, [products, selectedCategoryId]);
+
+  useEffect(() => {
+    bulkItemsRef.current = bulkItems;
+  }, [bulkItems]);
+
+  useEffect(() => {
+    bulkCancelRef.current = bulkCancelRequested;
+  }, [bulkCancelRequested]);
+
+  useEffect(() => {
+    if (!bulkCategoryId && categories[0]?.id) {
+      setBulkCategoryId(categories[0].id);
+    }
+  }, [bulkCategoryId, categories]);
+
+  const updateBulkItem = (
+    itemId: string,
+    next: Partial<Pick<BulkUploadItem, "status" | "message">>
+  ) => {
+    setBulkItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              ...next,
+            }
+          : item
+      )
+    );
+  };
+
+  const bulkSummary = useMemo(() => {
+    const doneStatuses: BulkUploadStatus[] = [
+      "success",
+      "error",
+      "invalid",
+      "cancelled",
+    ];
+    const total = bulkItems.length;
+    const done = bulkItems.filter((item) => doneStatuses.includes(item.status)).length;
+    const ok = bulkItems.filter((item) => item.status === "success").length;
+    const failed = bulkItems.filter((item) => item.status === "error").length;
+    const invalid = bulkItems.filter((item) => item.status === "invalid").length;
+    const uploading = bulkItems.filter((item) => item.status === "uploading").length;
+    return { total, done, ok, failed, invalid, uploading };
+  }, [bulkItems]);
+
+  const runBulkUpload = async (
+    itemIds: string[],
+    sharedPricing: SharedPricePayload
+  ) => {
+    if (!bulkCategoryId) {
+      setProductError("Selecciona una categoria para la carga masiva.");
+      return;
+    }
+
+    if (itemIds.length === 0) {
+      setProductMessage("No hay archivos pendientes para subir.");
+      return;
+    }
+
+    setProductError(null);
+    setProductMessage(null);
+    setBulkRunning(true);
+    setBulkCancelRequested(false);
+    bulkCancelRef.current = false;
+
+    const queue = [...itemIds];
+    let cursor = 0;
+
+    const workerCount = Math.min(BULK_UPLOAD_CONCURRENCY, queue.length);
+
+    const workers = Array.from({ length: workerCount }, async () => {
+      while (true) {
+        if (bulkCancelRef.current) return;
+
+        const currentIndex = cursor;
+        cursor += 1;
+        const itemId = queue[currentIndex];
+        if (!itemId) return;
+
+        const item = bulkItemsRef.current.find((entry) => entry.id === itemId);
+        if (!item || item.status === "invalid") continue;
+
+        updateBulkItem(item.id, { status: "uploading", message: "Subiendo..." });
+
+        let uploadedPath: string | null = null;
+
+        try {
+          const fileExt = item.file.name.split(".").pop() ?? "jpg";
+          uploadedPath = `uploads/${crypto.randomUUID()}.${fileExt}`;
+          const { error: uploadError } = await supabase.storage
+            .from("products")
+            .upload(uploadedPath, item.file, {
+              cacheControl: "3600",
+              upsert: false,
+            });
+
+          if (uploadError) {
+            throw new Error(uploadError.message);
+          }
+
+          const { data } = supabase.storage
+            .from("products")
+            .getPublicUrl(uploadedPath);
+
+          const payload = {
+            name: item.name,
+            price: sharedPricing.price,
+            price_4: sharedPricing.price_4,
+            price_6: sharedPricing.price_6,
+            price_8: sharedPricing.price_8,
+            category_id: bulkCategoryId,
+            image_url: data.publicUrl,
+          };
+
+          const { data: created, error: insertError } = await supabase
+            .from("products")
+            .insert(payload)
+            .select("*")
+            .single();
+
+          if (insertError || !created) {
+            throw new Error(insertError?.message ?? "No se pudo crear el producto.");
+          }
+
+          setProducts((prev) => [created, ...prev]);
+          updateBulkItem(item.id, { status: "success", message: "OK" });
+        } catch (error: any) {
+          if (uploadedPath) {
+            await supabase.storage.from("products").remove([uploadedPath]);
+          }
+
+          updateBulkItem(item.id, {
+            status: "error",
+            message: error?.message ?? "Error al subir",
+          });
+        }
+      }
+    });
+
+    await Promise.all(workers);
+
+    if (bulkCancelRef.current) {
+      setBulkItems((prev) =>
+        prev.map((item) =>
+          itemIds.includes(item.id) && item.status === "pending"
+            ? { ...item, status: "cancelled", message: "Cancelado" }
+            : item
+        )
+      );
+      setProductMessage("Carga masiva cancelada.");
+    } else {
+      setProductMessage("Carga masiva finalizada.");
+    }
+
+    setBulkRunning(false);
+    setBulkCancelRequested(false);
+  };
+
+  const handleBulkSelectFiles = (files: FileList | null) => {
+    if (!files) return;
+
+    const incoming: BulkUploadItem[] = Array.from(files).map((file) => {
+      const validationError = validateProductImageFile(file);
+      return {
+        id: crypto.randomUUID(),
+        file,
+        name: getBaseNameFromFile(file.name),
+        status: validationError ? "invalid" : "pending",
+        message: validationError ?? "En cola",
+      };
+    });
+
+    setBulkItems((prev) => [...prev, ...incoming]);
+  };
+
+  const handleStartBulkUpload = async () => {
+    if (bulkRunning) return;
+
+    const priceTemplate = getSharedPricePayload(productForm);
+    if (!priceTemplate.payload) {
+      setProductError(
+        priceTemplate.error ??
+          "Definí precio único o precios por tamaño para aplicar a todas las calcos."
+      );
+      return;
+    }
+
+    const pendingIds = bulkItemsRef.current
+      .filter((item) => item.status === "pending")
+      .map((item) => item.id);
+
+    await runBulkUpload(pendingIds, priceTemplate.payload);
+  };
+
+  const handleCancelBulkUpload = () => {
+    if (!bulkRunning) return;
+    setBulkCancelRequested(true);
+    bulkCancelRef.current = true;
+  };
+
+  const handleRetryFailedBulkUploads = async () => {
+    if (bulkRunning) return;
+
+    const priceTemplate = getSharedPricePayload(productForm);
+    if (!priceTemplate.payload) {
+      setProductError(
+        priceTemplate.error ??
+          "Definí precio único o precios por tamaño para aplicar a todas las calcos."
+      );
+      return;
+    }
+
+    const failedIds = bulkItemsRef.current
+      .filter((item) => item.status === "error")
+      .map((item) => item.id);
+
+    if (failedIds.length === 0) return;
+
+    setBulkItems((prev) =>
+      prev.map((item) =>
+        failedIds.includes(item.id)
+          ? { ...item, status: "pending", message: "En cola" }
+          : item
+      )
+    );
+
+    await runBulkUpload(failedIds, priceTemplate.payload);
+  };
+
+  const handleRemoveBulkItem = (itemId: string) => {
+    setBulkItems((prev) => {
+      const target = prev.find((item) => item.id === itemId);
+      if (!target) return prev;
+      if (bulkRunning && target.status === "uploading") {
+        return prev;
+      }
+      return prev.filter((item) => item.id !== itemId);
+    });
+  };
 
   const ensureUniqueCategorySlug = async (name: string, id?: string) => {
     const base = slugify(name) || "categoria";
@@ -228,7 +564,7 @@ export const AdminDashboard = ({
 
     const trimmedName = categoryForm.name.trim();
     if (!trimmedName) {
-      setCategoryMessage("Ingresá un nombre válido.");
+      setCategoryMessage("Ingresa un nombre valido.");
       setCategoryLoading(false);
       return;
     }
@@ -306,7 +642,7 @@ export const AdminDashboard = ({
 
   const handleDeleteCategory = async (id: string) => {
     const confirmed = window.confirm(
-      "¿Eliminar la categoría? Los productos asociados quedarán huérfanos."
+      "¿Eliminar la categoria? Los productos asociados quedaran huerfanos."
     );
     if (!confirmed) return;
 
@@ -316,7 +652,7 @@ export const AdminDashboard = ({
       setCategoryMessage(error.message);
     } else {
       setCategories((prev) => prev.filter((cat) => cat.id !== id));
-      setCategoryMessage("Categoría eliminada.");
+      setCategoryMessage("Categoria eliminada.");
     }
   };
 
@@ -338,53 +674,9 @@ export const AdminDashboard = ({
       return;
     }
 
-    const uniquePrice =
-      productForm.legacy_price > 0 ? Math.round(productForm.legacy_price) : 0;
-    const enabledSizeFlags = [
-      productForm.size_4_enabled,
-      productForm.size_6_enabled,
-      productForm.size_8_enabled,
-    ];
-    const hasAnyEnabledSize = enabledSizeFlags.some(Boolean);
-
-    const price4 = parseOptionalSizePrice(
-      productForm.size_4_enabled,
-      productForm.size_4_price
-    );
-    const price6 = parseOptionalSizePrice(
-      productForm.size_6_enabled,
-      productForm.size_6_price
-    );
-    const price8 = parseOptionalSizePrice(
-      productForm.size_8_enabled,
-      productForm.size_8_price
-    );
-
-    const invalidEnabledSizes: string[] = [];
-    if (productForm.size_4_enabled && price4 === null) invalidEnabledSizes.push("4 cm");
-    if (productForm.size_6_enabled && price6 === null) invalidEnabledSizes.push("6 cm");
-    if (productForm.size_8_enabled && price8 === null) invalidEnabledSizes.push("8 cm");
-
-    if (uniquePrice > 0 && hasAnyEnabledSize) {
-      setProductError(
-        "Elegi una sola modalidad de precio: unico o por tamaños."
-      );
-      setProductLoading(false);
-      return;
-    }
-
-    if (uniquePrice <= 0 && !hasAnyEnabledSize) {
-      setProductError(
-        "Cargá un precio unico o habilitá al menos un tamaño con precio."
-      );
-      setProductLoading(false);
-      return;
-    }
-
-    if (invalidEnabledSizes.length > 0) {
-      setProductError(
-        `Completá precio mayor a 0 para: ${invalidEnabledSizes.join(", ")}.`
-      );
+    const priceTemplate = getSharedPricePayload(productForm);
+    if (!priceTemplate.payload) {
+      setProductError(priceTemplate.error);
       setProductLoading(false);
       return;
     }
@@ -392,7 +684,7 @@ export const AdminDashboard = ({
     let imageUrl = productForm.image_url;
 
     if (!imageUrl && !productForm.file) {
-      setProductError("Subí una imagen del producto.");
+      setProductError("Subi una imagen del producto.");
       setProductLoading(false);
       return;
     }
@@ -429,17 +721,12 @@ export const AdminDashboard = ({
       return;
     }
 
-    const sizePrices = [price4, price6, price8].filter(
-      (value): value is number => value !== null
-    );
-    const fallbackLegacyPrice = uniquePrice > 0 ? uniquePrice : sizePrices[0] ?? 0;
-
     const payload = {
       name: productForm.name,
-      price: fallbackLegacyPrice,
-      price_4: price4,
-      price_6: price6,
-      price_8: price8,
+      price: priceTemplate.payload.price,
+      price_4: priceTemplate.payload.price_4,
+      price_6: priceTemplate.payload.price_6,
+      price_8: priceTemplate.payload.price_8,
       category_id: productForm.category_id,
       image_url: imageUrl,
     };
@@ -587,7 +874,7 @@ export const AdminDashboard = ({
           onClick={handleLogout}
           className="rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
         >
-          Cerrar sesión
+          Cerrar sesion
         </button>
       </header>
 
@@ -642,7 +929,7 @@ export const AdminDashboard = ({
               className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
             />
             <label className="text-sm font-medium text-slate-600">
-              Subir imagen de categoría (opcional)
+              Subir imagen de categoria (opcional)
               <input
                 type="file"
                 accept="image/*"
@@ -672,7 +959,7 @@ export const AdminDashboard = ({
           <h3 className="text-lg font-semibold text-slate-900">Listado</h3>
           <div className="mt-4 space-y-3 text-sm">
             {categories.length === 0 ? (
-              <p className="text-slate-500">Sin categorías.</p>
+              <p className="text-slate-500">Sin categorias.</p>
             ) : (
               categories.map((category) => (
                 <div
@@ -749,11 +1036,11 @@ export const AdminDashboard = ({
             />
             <div className="rounded-2xl border border-slate-200 p-3">
               <label className="block text-sm font-semibold text-slate-700">
-                Precio unico (sin tamaños)
+                Precio unico (sin tamanos)
               </label>
               <p className="mt-1 text-xs text-slate-500">
-                Usalo para productos sin selector de tamaño (ej: planchas
-                tematicas). No lo combines con precios por tamaño.
+                Usalo para productos sin selector de tamano (ej: planchas
+                tematicas). No lo combines con precios por tamano.
               </p>
               <input
                 type="number"
@@ -776,7 +1063,7 @@ export const AdminDashboard = ({
             </div>
             <div className="rounded-2xl border border-slate-200 p-3">
               <p className="text-sm font-semibold text-slate-700">
-                Tamaños opcionales con precio (ARS)
+                Tamanos opcionales con precio (ARS)
               </p>
               <p className="mt-1 text-xs text-slate-500">
                 Elegi esta modalidad solo si no cargaste precio unico.
@@ -884,7 +1171,7 @@ export const AdminDashboard = ({
               }
               className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
             >
-              <option value="">Seleccioná categoría</option>
+              <option value="">Selecciona categoria</option>
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
@@ -913,6 +1200,134 @@ export const AdminDashboard = ({
                 Máx 350 KB (JPG/PNG/WebP)
               </span>
             </label>
+
+            <div className="rounded-2xl border border-slate-200 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-slate-800">
+                  Subir muchas calcos
+                </p>
+                <p className="text-xs text-slate-500">
+                  {bulkSummary.done} de {bulkSummary.total} subidas
+                </p>
+              </div>
+
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <select
+                  value={bulkCategoryId}
+                  onChange={(event) => setBulkCategoryId(event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+                >
+                  <option value="">Seleccioná categoría para todas estas imágenes</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+
+                <label className="w-full">
+                  <span className="sr-only">Seleccionar imágenes</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(event) => {
+                      handleBulkSelectFiles(event.target.files);
+                      event.currentTarget.value = "";
+                    }}
+                    className="w-full rounded-xl border border-dashed border-slate-300 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+                  />
+                </label>
+              </div>
+
+              <p className="mt-2 text-xs text-slate-500">
+                Máx 350 KB por archivo (JPG/PNG/WebP)
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Usa la configuración de precio de este formulario y se aplica a todas las calcos del lote.
+              </p>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleStartBulkUpload}
+                  disabled={bulkRunning}
+                  className="rounded-full bg-[var(--color-primary)] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[var(--color-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Iniciar carga
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelBulkUpload}
+                  disabled={!bulkRunning}
+                  className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRetryFailedBulkUploads}
+                  disabled={bulkRunning || bulkSummary.failed === 0}
+                  className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Reintentar fallidas
+                </button>
+              </div>
+
+              {bulkItems.length > 0 ? (
+                <div className="mt-3 max-h-56 space-y-2 overflow-y-auto rounded-xl border border-slate-100 p-2">
+                  {bulkItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 px-3 py-2 text-xs"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-slate-800">
+                          {item.file.name}
+                        </p>
+                        <p className="truncate text-slate-500">{item.message}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`shrink-0 rounded-full px-2 py-1 font-semibold ${
+                            item.status === "success"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : item.status === "error" || item.status === "invalid"
+                              ? "bg-rose-100 text-rose-700"
+                              : item.status === "uploading"
+                              ? "bg-amber-100 text-amber-700"
+                              : item.status === "cancelled"
+                              ? "bg-slate-200 text-slate-600"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {item.status === "pending"
+                            ? "pendiente"
+                            : item.status === "uploading"
+                            ? "subiendo"
+                            : item.status === "success"
+                            ? "ok"
+                            : item.status === "invalid"
+                            ? "rechazado"
+                            : item.status === "cancelled"
+                            ? "cancelado"
+                            : "error"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveBulkItem(item.id)}
+                          disabled={bulkRunning && item.status === "uploading"}
+                          className="rounded-full border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
             <button
               type="submit"
               className="rounded-full bg-[var(--color-primary)] px-6 py-3 text-white hover:bg-[var(--color-primary-dark)]"
@@ -985,4 +1400,6 @@ export const AdminDashboard = ({
     </div>
   );
 };
+
+
 

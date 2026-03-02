@@ -22,6 +22,7 @@ export const ProductCard = ({ product }: Props) => {
   const [selectedSizeCm, setSelectedSizeCm] = useState<ProductSizeCm | null>(
     null
   );
+  const [selectionError, setSelectionError] = useState("");
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sizeOptions = getProductSizeOptions(product);
@@ -39,6 +40,7 @@ export const ProductCard = ({ product }: Props) => {
   const openConfigurator = () => {
     setQuantity(1);
     setSelectedSizeCm(null);
+    setSelectionError("");
     setIsOpen(true);
   };
 
@@ -150,7 +152,10 @@ export const ProductCard = ({ product }: Props) => {
                       name={`size-${product.id}`}
                       value={option.sizeCm}
                       checked={selectedSizeCm === option.sizeCm}
-                      onChange={() => setSelectedSizeCm(option.sizeCm)}
+                      onChange={() => {
+                        setSelectedSizeCm(option.sizeCm);
+                        setSelectionError("");
+                      }}
                       className="sr-only"
                     />
                   </label>
@@ -187,8 +192,18 @@ export const ProductCard = ({ product }: Props) => {
                   quantity={quantity}
                   disabled={hasSizes && !selectedSizeCm}
                   disabledLabel={"Eleg\u00ed tama\u00f1o"}
+                  onDisabledClick={() => {
+                    if (hasSizes && !selectedSizeCm) {
+                      setSelectionError("Elegí un tamaño para continuar.");
+                    }
+                  }}
                   onAdded={handleAdded}
                 />
+                {selectionError ? (
+                  <p className="text-center text-xs font-medium text-rose-600">
+                    {selectionError}
+                  </p>
+                ) : null}
               </div>
             ) : (
               <a
