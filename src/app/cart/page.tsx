@@ -12,13 +12,20 @@ import {
   validateCouponCode,
   type AppliedCoupon,
 } from "@/lib/coupons";
+import {
+  clearCart as clearPersistedCart,
+  getLastOrder,
+  recoverLastOrder,
+  saveLastOrder,
+  type LastOrder,
+} from "@/lib/cartCheckout";
 import { buildImagePlaceholder, formatCurrency } from "@/lib/utils";
 import { buildWhatsAppCheckoutUrl } from "@/lib/whatsapp";
 
 const transferAlias =
   process.env.NEXT_PUBLIC_TRANSFER_ALIAS ?? "TRANSFER_ALIAS";
 
-type CouponFeedback = {
+type Feedback = {
   type: "success" | "error";
   message: string;
 };
@@ -30,11 +37,15 @@ export default function CartPage() {
   const clear = useCartStore((state) => state.clear);
 
   const [couponInput, setCouponInput] = useState("");
-  const [couponFeedback, setCouponFeedback] = useState<CouponFeedback | null>(
-    null
-  );
+  const [couponFeedback, setCouponFeedback] = useState<Feedback | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [isApplying, setIsApplying] = useState(false);
+  const [checkoutFeedback, setCheckoutFeedback] = useState<Feedback | null>(null);
+  const [lastOrder, setLastOrder] = useState<LastOrder | null>(null);
+
+  useEffect(() => {
+    setLastOrder(getLastOrder());
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,7 +66,7 @@ export default function CartPage() {
           setAppliedCoupon(null);
           setCouponFeedback({
             type: "error",
-            message: "Cupón inválido",
+            message: "Cupon invalido",
           });
           return;
         }
@@ -66,7 +77,7 @@ export default function CartPage() {
         if (cancelled) return;
         setCouponFeedback({
           type: "error",
-          message: "No se pudo validar el cupón.",
+          message: "No se pudo validar el cupon.",
         });
       } finally {
         if (!cancelled) {
@@ -104,7 +115,7 @@ export default function CartPage() {
   const handleApplyCoupon = async () => {
     const normalizedCode = normalizeCouponCode(couponInput);
     if (!normalizedCode) {
-      setCouponFeedback({ type: "error", message: "Cupón inválido" });
+      setCouponFeedback({ type: "error", message: "Cupon invalido" });
       return;
     }
 
@@ -115,7 +126,7 @@ export default function CartPage() {
       const coupon = await validateCouponCode(normalizedCode);
 
       if (!coupon) {
-        setCouponFeedback({ type: "error", message: "Cupón inválido" });
+        setCouponFeedback({ type: "error", message: "Cupon invalido" });
         return;
       }
 
@@ -124,12 +135,12 @@ export default function CartPage() {
       setCouponInput(coupon.code);
       setCouponFeedback({
         type: "success",
-        message: `Cupón aplicado: ${coupon.percent}%`,
+        message: `Cupon aplicado: ${coupon.percent}%`,
       });
     } catch {
       setCouponFeedback({
         type: "error",
-        message: "No se pudo validar el cupón.",
+        message: "No se pudo validar el cupon.",
       });
     } finally {
       setIsApplying(false);
@@ -146,8 +157,68 @@ export default function CartPage() {
   const checkoutUrl = buildWhatsAppCheckoutUrl({
     items,
     total: totalWithDiscount,
+    subtotal,
+    discountAmount,
+    discountPercent,
+    couponCode: appliedCoupon?.code ?? null,
     transferAlias,
   });
+
+  const handleCheckoutWhatsapp = () => {
+    if (items.length === 0) return;
+
+    const confirmed = window.confirm(
+      "Confirmas que queres enviar el pedido por WhatsApp?"
+    );
+    if (!confirmed) return;
+
+    const orderSnapshot: LastOrder = {
+      items: items.map((item) => ({ ...item })),
+      subtotal,
+      total: totalWithDiscount,
+      timestamp: new Date().toISOString(),
+      coupon: appliedCoupon,
+    };
+
+    saveLastOrder(orderSnapshot);
+    setLastOrder(orderSnapshot);
+
+    clearPersistedCart();
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponFeedback(null);
+
+    setCheckoutFeedback({
+      type: "success",
+      message: "Listo, abrimos WhatsApp para enviar tu pedido.",
+    });
+
+    window.location.assign(checkoutUrl);
+  };
+
+  const handleRecoverLastOrder = () => {
+    if (!lastOrder) return;
+
+    recoverLastOrder(lastOrder);
+
+    if (lastOrder.coupon) {
+      setAppliedCoupon(lastOrder.coupon);
+      setCouponInput(lastOrder.coupon.code);
+      setCouponFeedback({
+        type: "success",
+        message: `Cupon recuperado: ${lastOrder.coupon.percent}%`,
+      });
+    } else {
+      setAppliedCoupon(null);
+      setCouponInput("");
+      setCouponFeedback(null);
+    }
+
+    setCheckoutFeedback({
+      type: "success",
+      message: "Recuperamos tu ultimo pedido.",
+    });
+  };
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -156,22 +227,42 @@ export default function CartPage() {
           href="/"
           className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
         >
-          ← Seguir comprando
+          &larr; Seguir comprando
         </Link>
 
         <h1 className="text-4xl font-semibold">Tu carrito</h1>
 
         {items.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-12 text-center">
-            <p className="text-lg text-slate-600">Todavía no agregaste calcos.</p>
+            <p className="text-lg text-slate-600">Todavia no agregaste calcos.</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Link
                 href="/"
                 className="rounded-full bg-[var(--color-primary)] px-6 py-3 text-white hover:bg-[var(--color-primary-dark)]"
               >
-                Ir al catálogo
+                Ir al catalogo
               </Link>
+              {lastOrder && (
+                <button
+                  type="button"
+                  onClick={handleRecoverLastOrder}
+                  className="rounded-full border border-slate-300 px-6 py-3 text-slate-700 transition hover:bg-slate-50"
+                >
+                  Recuperar ultimo pedido
+                </button>
+              )}
             </div>
+            {checkoutFeedback && (
+              <p
+                className={`mt-4 text-sm ${
+                  checkoutFeedback.type === "success"
+                    ? "text-emerald-700"
+                    : "text-rose-600"
+                }`}
+              >
+                {checkoutFeedback.message}
+              </p>
+            )}
           </div>
         ) : (
           <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
@@ -200,7 +291,7 @@ export default function CartPage() {
                     </div>
                     {item.sizeCm && (
                       <p className="text-xs font-medium text-slate-500">
-                        Tamano: {item.sizeCm} cm
+                        {`Tama\u00f1o: ${item.sizeCm} cm`}
                       </p>
                     )}
                     <p className="text-xs text-slate-500">
@@ -214,7 +305,7 @@ export default function CartPage() {
                           className="text-lg text-slate-500 hover:text-slate-900"
                           onClick={() => setQty(item.id, item.quantity - 1)}
                         >
-                          −
+                          -
                         </button>
                         <span className="min-w-[2rem] text-center font-semibold">
                           {item.quantity}
@@ -277,7 +368,7 @@ export default function CartPage() {
                   <dd>-{formatCurrency(discountAmount)}</dd>
                 </div>
                 <div className="flex items-center justify-between">
-                  <dt>Envío</dt>
+                  <dt>Envio</dt>
                   <dd>A coordinar</dd>
                 </div>
                 <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-base font-semibold text-slate-900">
@@ -289,11 +380,23 @@ export default function CartPage() {
               <button
                 type="button"
                 className="mt-2 inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-white transition hover:bg-[var(--color-primary-dark)] disabled:cursor-not-allowed disabled:opacity-50"
-                onClick={() => window.open(checkoutUrl, "_blank")}
+                onClick={handleCheckoutWhatsapp}
                 disabled={items.length === 0}
               >
                 Finalizar por WhatsApp
               </button>
+
+              {checkoutFeedback && (
+                <p
+                  className={`text-xs ${
+                    checkoutFeedback.type === "success"
+                      ? "text-emerald-700"
+                      : "text-rose-600"
+                  }`}
+                >
+                  {checkoutFeedback.message}
+                </p>
+              )}
 
               <p className="text-xs text-slate-500">
                 Enviaremos un mensaje con el detalle del pedido, el total y el
