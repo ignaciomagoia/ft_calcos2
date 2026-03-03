@@ -1,28 +1,19 @@
-import { Suspense } from "react";
 import Link from "next/link";
-import { getAdminLists, getSessionProfile } from "@/lib/data";
-import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import { Suspense } from "react";
+import { CouponsAdminPanel } from "@/components/admin/CouponsAdminPanel";
 import { LoginForm } from "@/components/admin/LoginForm";
+import { getSessionProfile } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
-  const [{ user, profile }, lists] = await Promise.all([
-    getSessionProfile(),
-    getAdminLists(),
-  ]);
+export default async function AdminCouponsPage() {
+  const { user, profile } = await getSessionProfile();
 
   if (!user) {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-md space-y-6">
           <h1 className="text-3xl font-semibold">Panel EFETE</h1>
-          <Link
-            href="/admin/coupons"
-            className="inline-flex rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-          >
-            Admin &gt; Cupones
-          </Link>
           <Suspense fallback={null}>
             <LoginForm />
           </Suspense>
@@ -47,20 +38,24 @@ export default async function AdminPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-      <div className="mb-4 flex justify-end">
-        <Link
-          href="/admin/coupons"
-          className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-        >
-          Admin &gt; Cupones
-        </Link>
+      <div className="space-y-6">
+        <nav className="text-sm text-slate-500">
+          <Link href="/admin" className="hover:text-slate-900">
+            Admin
+          </Link>
+          <span className="mx-2">/</span>
+          <span className="font-medium text-slate-900">Cupones</span>
+        </nav>
+
+        <header>
+          <h1 className="text-3xl font-semibold">Admin &gt; Cupones</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Gestiona cupones guardados en Supabase.
+          </p>
+        </header>
+
+        <CouponsAdminPanel />
       </div>
-      <Suspense fallback={<p>Cargando panel...</p>}>
-        <AdminDashboard
-          initialCategories={lists.categories}
-          initialProducts={lists.products}
-        />
-      </Suspense>
     </div>
   );
 }

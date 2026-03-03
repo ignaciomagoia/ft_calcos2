@@ -52,3 +52,31 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
 after insert on auth.users
 for each row execute procedure public.handle_new_user();
+
+create table if not exists public.coupons (
+  id uuid primary key default uuid_generate_v4(),
+  code text not null,
+  percent int not null check (percent between 1 and 100),
+  created_at timestamptz default now()
+);
+
+create unique index if not exists coupons_code_upper_trim_idx
+  on public.coupons ((upper(btrim(code))));
+create index if not exists coupons_created_idx
+  on public.coupons (created_at desc);
+
+create or replace function public.validate_coupon(input_code text)
+returns table (code text, percent int)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select c.code, c.percent
+  from public.coupons c
+  where upper(btrim(c.code)) = upper(btrim(input_code))
+  limit 1;
+$$;
+
+revoke all on function public.validate_coupon(text) from public;
+grant execute on function public.validate_coupon(text) to anon, authenticated;

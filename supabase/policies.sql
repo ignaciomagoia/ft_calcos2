@@ -13,6 +13,7 @@ $$;
 alter table public.categories enable row level security;
 alter table public.products enable row level security;
 alter table public.profiles enable row level security;
+alter table public.coupons enable row level security;
 
 -- categories
 drop policy if exists "public select categories" on public.categories;
@@ -85,3 +86,22 @@ create policy "admin update profile"
   for update
   using (public.is_admin(auth.uid()))
   with check (public.is_admin(auth.uid()));
+
+-- coupons
+drop policy if exists "admin select coupons" on public.coupons;
+create policy "admin select coupons"
+  on public.coupons
+  for select
+  using (public.is_admin(auth.uid()));
+
+drop policy if exists "admin insert coupons" on public.coupons;
+create policy "admin insert coupons"
+  on public.coupons
+  for insert
+  with check (public.is_admin(auth.uid()));
+
+drop policy if exists "admin delete coupons" on public.coupons;
+create policy "admin delete coupons"
+  on public.coupons
+  for delete
+  using (public.is_admin(auth.uid()));
