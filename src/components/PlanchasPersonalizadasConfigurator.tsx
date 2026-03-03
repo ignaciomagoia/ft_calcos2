@@ -2,10 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 
 const WA_NUMBER = "3516183951";
-const infoSlides = [
+
+type SheetTypeId = "con_laca" | "sin_laca" | "holo";
+type SheetSizeId = "s45x15" | "s143x196" | "s195x274";
+type SheetQuantity = 20 | 50 | 100 | 200;
+
+const INFO_SLIDES = [
   {
     src: "/infoplanchapersonalizada3.png",
     alt: "Informacion de planchas personalizadas 1",
@@ -20,22 +25,71 @@ const infoSlides = [
   },
 ] as const;
 
-const sizeOptions = [
-  "15x4,5 - 4 calcos",
-  "14,3x19,6 - 8 calcos",
-  "19,5 x 27,4 - 12 calcos",
-] as const;
+const TYPE_OPTIONS: Array<{ id: SheetTypeId; label: string }> = [
+  { id: "con_laca", label: "Con laca" },
+  { id: "sin_laca", label: "Sin laca" },
+  { id: "holo", label: "Holograficas" },
+];
 
-type SizeValue = (typeof sizeOptions)[number];
+const SIZE_OPTIONS: Array<{ id: SheetSizeId; label: string; waLabel: string }> = [
+  { id: "s45x15", label: "4,5 x 15", waLabel: "4,5x15" },
+  { id: "s143x196", label: "14,3 x 19,6", waLabel: "14,3x19,6" },
+  { id: "s195x274", label: "19,5 x 27,4", waLabel: "19,5x27,4" },
+];
+
+const QUANTITY_OPTIONS_BY_SIZE: Record<SheetSizeId, SheetQuantity[]> = {
+  s45x15: [20, 50, 100, 200],
+  s143x196: [20, 50, 100, 200],
+  s195x274: [20, 50, 100, 200],
+};
+
+const PRICE_TABLE: Record<
+  SheetTypeId,
+  Record<SheetSizeId, Record<SheetQuantity, number>>
+> = {
+  con_laca: {
+    s45x15: { 20: 30000, 50: 79500, 100: 149000, 200: 278000 },
+    s143x196: { 20: 62000, 50: 159000, 100: 309000, 200: 578000 },
+    s195x274: { 20: 99000, 50: 249000, 100: 489000, 200: 918000 },
+  },
+  sin_laca: {
+    s45x15: { 20: 26000, 50: 69000, 100: 129000, 200: 238000 },
+    s143x196: { 20: 55000, 50: 139000, 100: 279000, 200: 518000 },
+    s195x274: { 20: 87000, 50: 219000, 100: 429000, 200: 798000 },
+  },
+  holo: {
+    s45x15: { 20: 39000, 50: 99000, 100: 189000, 200: 358000 },
+    s143x196: { 20: 75000, 50: 189000, 100: 369000, 200: 698000 },
+    s195x274: { 20: 119000, 50: 319000, 100: 599000, 200: 1118000 },
+  },
+};
+
+const formatArs = (value: number) => `$${value.toLocaleString("es-AR")}`;
 
 const PlanchasPersonalizadasConfigurator = () => {
-  const [size, setSize] = useState<SizeValue | "">("");
-  const [quantity, setQuantity] = useState(1);
-  const [error, setError] = useState("");
+  const [sheetType, setSheetType] = useState<SheetTypeId>("con_laca");
+  const [sheetSize, setSheetSize] = useState<SheetSizeId>("s45x15");
+  const [quantity, setQuantity] = useState<SheetQuantity>(20);
   const [activeSlide, setActiveSlide] = useState(0);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const slideRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const totalSlides = infoSlides.length;
+
+  const totalSlides = INFO_SLIDES.length;
+  const quantityOptions = QUANTITY_OPTIONS_BY_SIZE[sheetSize];
+  const selectedType = TYPE_OPTIONS.find((option) => option.id === sheetType)!;
+  const selectedSize = SIZE_OPTIONS.find((option) => option.id === sheetSize)!;
+
+  useEffect(() => {
+    if (!quantityOptions.includes(quantity)) {
+      setQuantity(quantityOptions[0]);
+    }
+  }, [quantity, quantityOptions]);
+
+  const total = useMemo(
+    () => PRICE_TABLE[sheetType][sheetSize][quantity],
+    [quantity, sheetSize, sheetType]
+  );
+  const unitPrice = useMemo(() => total / quantity, [quantity, total]);
 
   const clampSlideIndex = (index: number) =>
     (index + totalSlides) % totalSlides;
@@ -57,7 +111,7 @@ const PlanchasPersonalizadasConfigurator = () => {
     const onScroll = () => {
       if (!viewport.clientWidth) return;
       const nextIndex = clampSlideIndex(
-        Math.round(viewport.scrollLeft / viewport.clientWidth),
+        Math.round(viewport.scrollLeft / viewport.clientWidth)
       );
       setActiveSlide(nextIndex);
     };
@@ -79,27 +133,16 @@ const PlanchasPersonalizadasConfigurator = () => {
     }
   };
 
-  const updateQuantity = (nextValue: number) => {
-    if (Number.isNaN(nextValue)) return;
-    setQuantity(Math.min(999, Math.max(1, Math.floor(nextValue))));
-  };
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!size || quantity < 1) {
-      setError("Elegí tamaño y cantidad mínima 1.");
-      return;
-    }
-
-    setError("");
-
+  const handleOpenWhatsapp = () => {
     const message = [
-      "Hola! Quiero Planchas personalizadas",
-      `Tamaño: ${size}`,
-      `Cantidad de planchas: ${quantity}`,
+      "Pedido – Planchas personalizadas 🧾",
       "",
-      "Me falta enviarte el diseño/foto para imprimir. Gracias!",
+      `Tipo: ${selectedType.label}`,
+      `Tamaño: ${selectedSize.waLabel}`,
+      `Cantidad: ${quantity}`,
+      `Total: ${formatArs(total)}`,
+      "",
+      "Importante: falta que te envíe la foto/diseño que quiero ✅",
     ].join("\n");
 
     const url = new URL("https://api.whatsapp.com/send");
@@ -122,7 +165,7 @@ const PlanchasPersonalizadasConfigurator = () => {
               aria-roledescription="carousel"
               aria-label="Informacion de planchas personalizadas"
             >
-              {infoSlides.map((slide, index) => (
+              {INFO_SLIDES.map((slide, index) => (
                 <div
                   key={slide.src}
                   ref={(element) => {
@@ -167,7 +210,7 @@ const PlanchasPersonalizadasConfigurator = () => {
           </div>
 
           <div className="mt-3 flex items-center justify-center gap-2">
-            {infoSlides.map((slide, index) => (
+            {INFO_SLIDES.map((slide, index) => (
               <button
                 key={slide.src}
                 type="button"
@@ -197,100 +240,126 @@ const PlanchasPersonalizadasConfigurator = () => {
       <section className="w-full bg-white py-8">
         <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="card rounded-3xl p-6 sm:p-8">
-            <div className="space-y-3">
+            <div className="space-y-2">
               <p className="pill w-fit">Planchas personalizadas</p>
               <h1 className="text-3xl font-semibold text-slate-900">
                 Planchas personalizadas
               </h1>
-              <p className="text-slate-600">
+              <p className="text-sm text-slate-600">
                 Te recordamos que tenemos una demora de 7 a 10 días hábiles, si
                 están antes te avisamos (:
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-              <fieldset className="space-y-3">
-                <legend className="text-sm font-semibold text-slate-800">
-                  Elegí el tamaño de tu plancha
-                </legend>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  {sizeOptions.map((option) => (
-                    <label
-                      key={option}
-                      className={`cursor-pointer rounded-2xl border px-4 py-3 text-center text-sm font-semibold transition ${
-                        size === option
-                          ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                          : "border-slate-200 text-slate-700 hover:border-slate-300"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="size"
-                        value={option}
-                        checked={size === option}
-                        onChange={() => setSize(option)}
-                        className="sr-only"
-                      />
-                      {option}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-
-              <div className="space-y-3">
-                <label
-                  htmlFor="quantity"
-                  className="text-sm font-semibold text-slate-800"
-                >
-                  Cantidad de planchas
-                </label>
-                <div className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-2">
-                  <button
-                    type="button"
-                    onClick={() => updateQuantity(quantity - 1)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-lg font-semibold text-slate-700 transition hover:bg-slate-50"
-                    aria-label="Disminuir cantidad"
+            <fieldset className="mt-6 space-y-3">
+              <legend className="text-sm font-semibold text-slate-800">
+                Tipo de plancha
+              </legend>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {TYPE_OPTIONS.map((option) => (
+                  <label
+                    key={option.id}
+                    className={`cursor-pointer rounded-2xl border px-4 py-3 text-center text-sm font-semibold transition ${
+                      sheetType === option.id
+                        ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                        : "border-slate-200 text-slate-700 hover:border-slate-300"
+                    }`}
                   >
-                    -
-                  </button>
-                  <input
-                    id="quantity"
-                    type="number"
-                    min={1}
-                    value={quantity}
-                    onChange={(event) =>
-                      updateQuantity(Number(event.target.value))
-                    }
-                    className="w-16 border-0 bg-transparent text-center text-base font-semibold text-slate-900 focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => updateQuantity(quantity + 1)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-lg font-semibold text-slate-700 transition hover:bg-slate-50"
-                    aria-label="Aumentar cantidad"
+                    <input
+                      type="radio"
+                      className="sr-only"
+                      name="sheetType"
+                      value={option.id}
+                      checked={sheetType === option.id}
+                      onChange={() => setSheetType(option.id)}
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className="mt-6 space-y-3">
+              <legend className="text-sm font-semibold text-slate-800">
+                Tamaño de plancha
+              </legend>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {SIZE_OPTIONS.map((option) => (
+                  <label
+                    key={option.id}
+                    className={`cursor-pointer rounded-2xl border px-4 py-3 text-center text-sm font-semibold transition ${
+                      sheetSize === option.id
+                        ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                        : "border-slate-200 text-slate-700 hover:border-slate-300"
+                    }`}
                   >
-                    +
+                    <input
+                      type="radio"
+                      className="sr-only"
+                      name="sheetSize"
+                      value={option.id}
+                      checked={sheetSize === option.id}
+                      onChange={() => setSheetSize(option.id)}
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className="mt-6 space-y-3">
+              <legend className="text-sm font-semibold text-slate-800">
+                Cantidad
+              </legend>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {quantityOptions.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setQuantity(option)}
+                    className={`rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                      quantity === option
+                        ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                        : "border-slate-200 text-slate-700 hover:border-slate-300"
+                    }`}
+                  >
+                    {option}
                   </button>
-                </div>
+                ))}
               </div>
+            </fieldset>
 
-              {error ? <p className="text-sm text-rose-600">{error}</p> : null}
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
-                >
-                  Pedir por WhatsApp 💬📦
-                </button>
-                <Link
-                  href="/"
-                  className="inline-flex items-center justify-center rounded-full border border-slate-300 px-8 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Volver al inicio
-                </Link>
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-[var(--color-secondary)]/10 p-4">
+              <p className="text-xs font-medium text-slate-500">
+                Precio según configuración elegida.
+              </p>
+              <div className="mt-2 flex flex-col gap-1 text-sm text-slate-700">
+                <p>
+                  <span className="font-semibold text-slate-900">Total:</span>{" "}
+                  {formatArs(total)}
+                </p>
+                <p>
+                  <span className="font-semibold text-slate-900">Precio c/u:</span>{" "}
+                  {formatArs(Math.round(unitPrice))}
+                </p>
               </div>
-            </form>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={handleOpenWhatsapp}
+                className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)]"
+              >
+                Consultar por WhatsApp
+              </button>
+              <Link
+                href="/"
+                className="inline-flex items-center justify-center rounded-full border border-slate-300 px-8 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Volver al inicio
+              </Link>
+            </div>
           </div>
         </div>
       </section>
