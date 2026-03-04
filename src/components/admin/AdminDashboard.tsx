@@ -22,11 +22,7 @@ type CategoryFormState = {
   sort_order: string;
 };
 
-type ProductFormState = {
-  id?: string;
-  name: string;
-  category_id: string;
-  image_url: string;
+type PriceFieldsState = {
   legacy_price: number;
   size_4_enabled: boolean;
   size_4_price: string;
@@ -34,8 +30,17 @@ type ProductFormState = {
   size_6_price: string;
   size_8_enabled: boolean;
   size_8_price: string;
+};
+
+type ProductFormState = PriceFieldsState & {
+  id?: string;
+  name: string;
+  category_id: string;
+  image_url: string;
   file?: File | null;
 };
+
+type BulkPriceFormState = PriceFieldsState;
 
 const emptyCategoryForm: CategoryFormState = {
   name: "",
@@ -57,6 +62,16 @@ const createEmptyProductForm = (categoryId?: string): ProductFormState => ({
   size_8_price: "",
   file: null,
 });
+
+const emptyBulkPriceForm: BulkPriceFormState = {
+  legacy_price: 0,
+  size_4_enabled: false,
+  size_4_price: "",
+  size_6_enabled: false,
+  size_6_price: "",
+  size_8_enabled: false,
+  size_8_price: "",
+};
 
 const MAX_PRODUCT_IMAGE_BYTES = 350 * 1024;
 const ALLOWED_PRODUCT_IMAGE_TYPES = [
@@ -121,7 +136,7 @@ type SharedPricePayload = {
 };
 
 const getSharedPricePayload = (
-  form: ProductFormState
+  form: PriceFieldsState
 ): { payload: SharedPricePayload | null; error: string | null } => {
   const uniquePrice = form.legacy_price > 0 ? Math.round(form.legacy_price) : 0;
 
@@ -271,6 +286,9 @@ export const AdminDashboard = ({
   const [productMessage, setProductMessage] = useState<string | null>(null);
   const [productError, setProductError] = useState<string | null>(null);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [bulkPriceForm, setBulkPriceForm] =
+    useState<BulkPriceFormState>(emptyBulkPriceForm);
+  const [bulkPriceLoading, setBulkPriceLoading] = useState(false);
   const [bulkCategoryId, setBulkCategoryId] = useState(
     initialCategories[0]?.id ?? ""
   );
@@ -937,6 +955,127 @@ export const AdminDashboard = ({
     }
   };
 
+  const updateSelectedProductsPrices = async (payload: SharedPricePayload) => {
+    const selectedProducts = products.filter((product) =>
+      selectedProductIdsSet.has(product.id)
+    );
+
+    const updatedIds: string[] = [];
+    const failedIds: string[] = [];
+
+    for (const product of selectedProducts) {
+      const { error } = await supabase
+        .from("products")
+        .update(payload)
+        .eq("id", product.id);
+
+      if (error) {
+        failedIds.push(product.id);
+      } else {
+        updatedIds.push(product.id);
+      }
+    }
+
+    if (updatedIds.length > 0) {
+      const updatedSet = new Set(updatedIds);
+      setProducts((prev) =>
+        prev.map((product) =>
+          updatedSet.has(product.id)
+            ? {
+                ...product,
+                price: payload.price,
+                price_4: payload.price_4,
+                price_6: payload.price_6,
+                price_8: payload.price_8,
+              }
+            : product
+        )
+      );
+    }
+
+    return {
+      updatedCount: updatedIds.length,
+      failedCount: failedIds.length,
+    };
+  };
+
+  const handleApplyProductFormPricesToSelected = async () => {
+    if (selectedProductIds.length === 0) {
+      setProductError("Seleccioná al menos una calco para editar.");
+      return;
+    }
+
+    const priceTemplate = getSharedPricePayload(productForm);
+    if (!priceTemplate.payload) {
+      setProductError(priceTemplate.error ?? "Configuración de precio inválida.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Aplicar los precios cargados arriba a ${selectedProductIds.length} producto(s)?`
+    );
+    if (!confirmed) return;
+
+    setBulkPriceLoading(true);
+    setProductError(null);
+    setProductMessage(null);
+
+    const { updatedCount, failedCount } = await updateSelectedProductsPrices(
+      priceTemplate.payload
+    );
+
+    if (updatedCount > 0) {
+      setProductMessage(`Precios actualizados para ${updatedCount} producto(s).`);
+    }
+
+    if (failedCount > 0) {
+      setProductError(
+        `No se pudieron actualizar ${failedCount} producto(s). Intentá de nuevo.`
+      );
+    }
+
+    setBulkPriceLoading(false);
+  };
+
+  const handleBulkPriceUpdate = async () => {
+    if (selectedProductIds.length === 0) {
+      setProductError("Seleccioná al menos una calco para editar.");
+      return;
+    }
+
+    const priceTemplate = getSharedPricePayload(bulkPriceForm);
+    if (!priceTemplate.payload) {
+      setProductError(priceTemplate.error ?? "Configuración de precio inválida.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Aplicar estos precios a ${selectedProductIds.length} producto(s)?`
+    );
+    if (!confirmed) return;
+
+    setBulkPriceLoading(true);
+    setProductError(null);
+    setProductMessage(null);
+
+    const { updatedCount, failedCount } = await updateSelectedProductsPrices(
+      priceTemplate.payload
+    );
+
+    if (updatedCount > 0) {
+      setProductMessage(`Precios actualizados para ${updatedCount} producto(s).`);
+    }
+
+    if (failedCount > 0) {
+      setProductError(
+        `No se pudieron actualizar ${failedCount} producto(s). Intentá de nuevo.`
+      );
+    }
+
+    setBulkPriceForm(emptyBulkPriceForm);
+    setBulkPriceLoading(false);
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.reload();
@@ -1432,13 +1571,33 @@ export const AdminDashboard = ({
               ) : null}
             </div>
 
-            <button
-              type="submit"
-              className="rounded-full bg-[var(--color-primary)] px-6 py-3 text-white hover:bg-[var(--color-primary-dark)]"
-              disabled={productLoading}
-            >
-              {productForm.id ? "Actualizar producto" : "Crear producto"}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="submit"
+                className="rounded-full bg-[var(--color-primary)] px-6 py-3 text-white hover:bg-[var(--color-primary-dark)]"
+                disabled={productLoading || bulkPriceLoading}
+              >
+                {productForm.id ? "Actualizar producto" : "Crear producto"}
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyProductFormPricesToSelected}
+                disabled={
+                  selectedProductIds.length === 0 ||
+                  productLoading ||
+                  bulkPriceLoading
+                }
+                className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Aplicar estos precios a seleccionados ({selectedProductIds.length})
+              </button>
+            </div>
+            {selectedProductIds.length > 0 ? (
+              <p className="text-xs text-slate-500">
+                Este botón usa solo los precios cargados arriba. No modifica nombre ni
+                imagen.
+              </p>
+            ) : null}
             {productError && (
               <p className="text-sm text-rose-600">{productError}</p>
             )}
@@ -1496,6 +1655,153 @@ export const AdminDashboard = ({
                 Visibles seleccionados: {selectedVisibleCount}
               </span>
             ) : null}
+          </div>
+          <div className="mt-3 rounded-2xl border border-slate-200 p-3">
+            <p className="text-sm font-semibold text-slate-800">
+              Editar precios seleccionados
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Aplicá un mismo precio a una o varias calcos. Elegí precio único o por
+              tamaños.
+            </p>
+
+            <div className="mt-3 space-y-3">
+              <div className="rounded-xl border border-slate-100 p-3">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Precio único
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  placeholder="Precio en ARS"
+                  value={bulkPriceForm.legacy_price > 0 ? bulkPriceForm.legacy_price : ""}
+                  onChange={(event) =>
+                    setBulkPriceForm((prev) => ({
+                      ...prev,
+                      legacy_price:
+                        event.target.value === ""
+                          ? 0
+                          : Math.max(Number(event.target.value), 0),
+                    }))
+                  }
+                  className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="rounded-xl border border-slate-100 p-3">
+                <p className="text-xs font-semibold text-slate-700">Precios por tamaño</p>
+                <div className="mt-2 space-y-2">
+                  <label className="grid grid-cols-[auto,1fr,110px] items-center gap-2 rounded-lg border border-slate-100 px-2 py-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={bulkPriceForm.size_4_enabled}
+                      onChange={(event) =>
+                        setBulkPriceForm((prev) => ({
+                          ...prev,
+                          size_4_enabled: event.target.checked,
+                        }))
+                      }
+                    />
+                    <span className="font-medium text-slate-700">4 cm</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      inputMode="numeric"
+                      placeholder="$"
+                      value={bulkPriceForm.size_4_price}
+                      onChange={(event) =>
+                        setBulkPriceForm((prev) => ({
+                          ...prev,
+                          size_4_price: event.target.value,
+                        }))
+                      }
+                      disabled={!bulkPriceForm.size_4_enabled}
+                      className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:border-slate-400 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100"
+                    />
+                  </label>
+                  <label className="grid grid-cols-[auto,1fr,110px] items-center gap-2 rounded-lg border border-slate-100 px-2 py-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={bulkPriceForm.size_6_enabled}
+                      onChange={(event) =>
+                        setBulkPriceForm((prev) => ({
+                          ...prev,
+                          size_6_enabled: event.target.checked,
+                        }))
+                      }
+                    />
+                    <span className="font-medium text-slate-700">6 cm</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      inputMode="numeric"
+                      placeholder="$"
+                      value={bulkPriceForm.size_6_price}
+                      onChange={(event) =>
+                        setBulkPriceForm((prev) => ({
+                          ...prev,
+                          size_6_price: event.target.value,
+                        }))
+                      }
+                      disabled={!bulkPriceForm.size_6_enabled}
+                      className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:border-slate-400 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100"
+                    />
+                  </label>
+                  <label className="grid grid-cols-[auto,1fr,110px] items-center gap-2 rounded-lg border border-slate-100 px-2 py-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={bulkPriceForm.size_8_enabled}
+                      onChange={(event) =>
+                        setBulkPriceForm((prev) => ({
+                          ...prev,
+                          size_8_enabled: event.target.checked,
+                        }))
+                      }
+                    />
+                    <span className="font-medium text-slate-700">8 cm</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      inputMode="numeric"
+                      placeholder="$"
+                      value={bulkPriceForm.size_8_price}
+                      onChange={(event) =>
+                        setBulkPriceForm((prev) => ({
+                          ...prev,
+                          size_8_price: event.target.value,
+                        }))
+                      }
+                      disabled={!bulkPriceForm.size_8_enabled}
+                      className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:border-slate-400 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleBulkPriceUpdate}
+                  disabled={selectedProductIds.length === 0 || bulkPriceLoading}
+                  className="rounded-full bg-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[var(--color-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Aplicar precios a seleccionados
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBulkPriceForm(emptyBulkPriceForm)}
+                  disabled={bulkPriceLoading}
+                  className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Limpiar precios
+                </button>
+              </div>
+            </div>
           </div>
           <div className="mt-3 space-y-3">
             {filteredAndSortedProducts.length === 0 ? (
