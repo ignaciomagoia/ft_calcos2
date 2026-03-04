@@ -102,6 +102,13 @@ const getBaseNameFromFile = (fileName: string) => {
   return baseName || "calco";
 };
 
+const normalizeSearchText = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
 const validateProductImageFile = (file: File | null | undefined): string | null => {
   if (!file) return null;
 
@@ -282,6 +289,7 @@ export const AdminDashboard = ({
     createEmptyProductForm(initialCategories[0]?.id)
   );
   const [selectedCategoryId, setSelectedCategoryId] = useState("all");
+  const [productSearchTerm, setProductSearchTerm] = useState("");
   const [productLoading, setProductLoading] = useState(false);
   const [productMessage, setProductMessage] = useState<string | null>(null);
   const [productError, setProductError] = useState<string | null>(null);
@@ -298,15 +306,23 @@ export const AdminDashboard = ({
   const bulkCancelRef = useRef(false);
   const bulkItemsRef = useRef<BulkUploadItem[]>([]);
   const filteredAndSortedProducts = useMemo(() => {
-    const filtered =
+    const filteredByCategory =
       selectedCategoryId === "all"
         ? products
         : products.filter((product) => product.category_id === selectedCategoryId);
 
+    const normalizedSearch = normalizeSearchText(productSearchTerm);
+    const filtered =
+      normalizedSearch.length === 0
+        ? filteredByCategory
+        : filteredByCategory.filter((product) =>
+            normalizeSearchText(product.name).includes(normalizedSearch)
+          );
+
     return [...filtered].sort((a, b) =>
       compareNamesWithTrailingNumber(a.name, b.name)
     );
-  }, [products, selectedCategoryId]);
+  }, [products, selectedCategoryId, productSearchTerm]);
   const selectedProductIdsSet = useMemo(
     () => new Set(selectedProductIds),
     [selectedProductIds]
@@ -1612,18 +1628,27 @@ export const AdminDashboard = ({
             <h3 className="text-lg font-semibold text-slate-900">
               Productos ({filteredAndSortedProducts.length})
             </h3>
-            <select
-              value={selectedCategoryId}
-              onChange={(event) => setSelectedCategoryId(event.target.value)}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
-            >
-              <option value="all">Todas</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="text"
+                value={productSearchTerm}
+                onChange={(event) => setProductSearchTerm(event.target.value)}
+                placeholder="Buscar calco por nombre"
+                className="w-[210px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
+              />
+              <select
+                value={selectedCategoryId}
+                onChange={(event) => setSelectedCategoryId(event.target.value)}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
+              >
+                <option value="all">Todas</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2 px-2">
             <button
@@ -1805,7 +1830,11 @@ export const AdminDashboard = ({
           </div>
           <div className="mt-3 space-y-3">
             {filteredAndSortedProducts.length === 0 ? (
-              <p className="text-sm text-slate-500">Sin productos cargados.</p>
+              <p className="text-sm text-slate-500">
+                {productSearchTerm.trim()
+                  ? "No hay productos con ese nombre."
+                  : "Sin productos cargados."}
+              </p>
             ) : (
               filteredAndSortedProducts.map((product) => (
                 <div
