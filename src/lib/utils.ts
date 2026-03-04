@@ -5,6 +5,8 @@ const pesosFormatter = new Intl.NumberFormat("es-AR", {
   maximumFractionDigits: 0,
 });
 
+const TRAILING_NUMBER_REGEX = /(\d+)\s*$/;
+
 export const formatCurrency = (amount: number) =>
   pesosFormatter.format(amount ?? 0);
 
@@ -30,4 +32,30 @@ export const slugify = (value: string) => {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-+|-+$/g, "");
+};
+
+export const extractTrailingNumber = (value: string): number | null => {
+  const normalized = value.trim();
+  const match = normalized.match(TRAILING_NUMBER_REGEX);
+  if (!match) return null;
+
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+export const compareNamesWithTrailingNumber = (
+  aName: string,
+  bName: string
+) => {
+  const aNumber = extractTrailingNumber(aName);
+  const bNumber = extractTrailingNumber(bName);
+
+  if (aNumber !== null && bNumber !== null && aNumber !== bNumber) {
+    return aNumber - bNumber;
+  }
+
+  if (aNumber !== null && bNumber === null) return -1;
+  if (aNumber === null && bNumber !== null) return 1;
+
+  return aName.localeCompare(bName, "es", { sensitivity: "base" });
 };

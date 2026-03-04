@@ -3,7 +3,11 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { Category, Product } from "@/lib/types";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
-import { formatCurrency, slugify } from "@/lib/utils";
+import {
+  compareNamesWithTrailingNumber,
+  formatCurrency,
+  slugify,
+} from "@/lib/utils";
 
 type Props = {
   initialCategories: Category[];
@@ -266,6 +270,7 @@ export const AdminDashboard = ({
   const [productLoading, setProductLoading] = useState(false);
   const [productMessage, setProductMessage] = useState<string | null>(null);
   const [productError, setProductError] = useState<string | null>(null);
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [bulkCategoryId, setBulkCategoryId] = useState(
     initialCategories[0]?.id ?? ""
   );
@@ -281,9 +286,21 @@ export const AdminDashboard = ({
         : products.filter((product) => product.category_id === selectedCategoryId);
 
     return [...filtered].sort((a, b) =>
-      a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+      compareNamesWithTrailingNumber(a.name, b.name)
     );
   }, [products, selectedCategoryId]);
+  const selectedProductIdsSet = useMemo(
+    () => new Set(selectedProductIds),
+    [selectedProductIds]
+  );
+  const selectedVisibleCount = useMemo(
+    () =>
+      filteredAndSortedProducts.reduce(
+        (acc, product) => acc + (selectedProductIdsSet.has(product.id) ? 1 : 0),
+        0
+      ),
+    [filteredAndSortedProducts, selectedProductIdsSet]
+  );
 
   useEffect(() => {
     bulkItemsRef.current = bulkItems;
@@ -298,6 +315,11 @@ export const AdminDashboard = ({
       setBulkCategoryId(categories[0].id);
     }
   }, [bulkCategoryId, categories]);
+
+  useEffect(() => {
+    const productIds = new Set(products.map((product) => product.id));
+    setSelectedProductIds((prev) => prev.filter((id) => productIds.has(id)));
+  }, [products]);
 
   const updateBulkItem = (
     itemId: string,
@@ -804,10 +826,7 @@ export const AdminDashboard = ({
     setProductMessage(null);
   };
 
-  const handleDeleteProduct = async (product: Product) => {
-    if (!window.confirm("¿Eliminar el producto?")) return;
-    setProductError(null);
-
+  const deleteProductRecord = async (product: Product) => {
     let warning: string | null = null;
     const storagePaths = getStoragePathsFromImageValue(product.image_url);
 
@@ -817,7 +836,7 @@ export const AdminDashboard = ({
         .remove(storagePaths);
       if (storageError) {
         warning =
-          "No se pudo borrar la imagen del storage, pero el producto se eliminara igual.";
+          "No se pudo borrar la imagen del storage, pero el producto se eliminó igual.";
       }
     }
 
@@ -825,11 +844,96 @@ export const AdminDashboard = ({
       .from("products")
       .delete()
       .eq("id", product.id);
+
+    return {
+      error: error?.message ?? null,
+      warning,
+    };
+  };
+
+  const handleDeleteProduct = async (product: Product) => {
+    if (!window.confirm("¿Eliminar el producto?")) return;
+    setProductError(null);
+    const { error, warning } = await deleteProductRecord(product);
+
     if (error) {
-      setProductError(error.message);
+      setProductError(error);
     } else {
       setProducts((prev) => prev.filter((prod) => prod.id !== product.id));
       setProductMessage(warning ?? "Producto eliminado.");
+    }
+  };
+
+  const toggleProductSelection = (productId: string) => {
+    setSelectedProductIds((prev) =>
+      prev.includes(productId)
+        ? prev.filter((id) => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  const handleSelectVisibleProducts = () => {
+    const visibleIds = filteredAndSortedProducts.map((product) => product.id);
+    setSelectedProductIds((prev) => Array.from(new Set([...prev, ...visibleIds])));
+  };
+
+  const handleClearSelectedProducts = () => {
+    setSelectedProductIds([]);
+  };
+
+  const handleDeleteSelectedProducts = async () => {
+    if (selectedProductIds.length === 0) return;
+
+    const selectedProducts = products.filter((product) =>
+      selectedProductIdsSet.has(product.id)
+    );
+
+    if (selectedProducts.length === 0) {
+      setSelectedProductIds([]);
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Eliminar ${selectedProducts.length} productos seleccionados?`
+    );
+    if (!confirmed) return;
+
+    setProductError(null);
+    setProductMessage(null);
+
+    const deletedIds: string[] = [];
+    const warnings: string[] = [];
+    const failedIds: string[] = [];
+
+    for (const product of selectedProducts) {
+      const { error, warning } = await deleteProductRecord(product);
+
+      if (error) {
+        failedIds.push(product.id);
+      } else {
+        deletedIds.push(product.id);
+        if (warning) warnings.push(product.id);
+      }
+    }
+
+    if (deletedIds.length > 0) {
+      const deletedSet = new Set(deletedIds);
+      setProducts((prev) => prev.filter((product) => !deletedSet.has(product.id)));
+      setSelectedProductIds((prev) => prev.filter((id) => !deletedSet.has(id)));
+    }
+
+    if (failedIds.length > 0) {
+      setProductError(
+        `No se pudieron eliminar ${failedIds.length} producto(s). Intentá de nuevo.`
+      );
+    }
+
+    if (deletedIds.length > 0) {
+      const warningMessage =
+        warnings.length > 0
+          ? " Algunas imágenes no se pudieron borrar del storage."
+          : "";
+      setProductMessage(`${deletedIds.length} producto(s) eliminado(s).${warningMessage}`);
     }
   };
 
@@ -1362,6 +1466,37 @@ export const AdminDashboard = ({
               ))}
             </select>
           </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2 px-2">
+            <button
+              type="button"
+              onClick={handleSelectVisibleProducts}
+              disabled={filteredAndSortedProducts.length === 0}
+              className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Seleccionar visibles
+            </button>
+            <button
+              type="button"
+              onClick={handleClearSelectedProducts}
+              disabled={selectedProductIds.length === 0}
+              className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Limpiar selección
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteSelectedProducts}
+              disabled={selectedProductIds.length === 0}
+              className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Borrar seleccionados ({selectedProductIds.length})
+            </button>
+            {selectedProductIds.length > 0 ? (
+              <span className="text-xs text-slate-500">
+                Visibles seleccionados: {selectedVisibleCount}
+              </span>
+            ) : null}
+          </div>
           <div className="mt-3 space-y-3">
             {filteredAndSortedProducts.length === 0 ? (
               <p className="text-sm text-slate-500">Sin productos cargados.</p>
@@ -1371,20 +1506,30 @@ export const AdminDashboard = ({
                   key={product.id}
                   className="flex flex-col gap-2 rounded-2xl border border-slate-100 px-3 py-3 text-sm"
                 >
-                  <div className="flex items-center justify-between">
-                    <p className="font-semibold">{product.name}</p>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedProductIdsSet.has(product.id)}
+                        onChange={() => toggleProductSelection(product.id)}
+                        className="h-4 w-4 rounded border-slate-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                      />
+                      <p className="truncate font-semibold">{product.name}</p>
+                    </div>
                     <span className="text-slate-500">
                       {formatProductPriceSummary(product)}
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-xs font-semibold">
                     <button
+                      type="button"
                       onClick={() => handleEditProduct(product)}
                       className="text-slate-500 hover:text-slate-900"
                     >
                       Editar
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleDeleteProduct(product)}
                       className="text-rose-500 hover:text-rose-700"
                     >

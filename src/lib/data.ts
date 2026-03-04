@@ -1,6 +1,7 @@
 import { type User } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "./supabaseServer";
 import type { AdminLists, Category, Product, Profile } from "./types";
+import { compareNamesWithTrailingNumber } from "./utils";
 
 const orderCategories = (query: any) =>
   query.order("sort_order", { ascending: true, nullsFirst: false }).order(
@@ -48,14 +49,16 @@ export const getProductsByCategoryId = async (
     .from("products")
     .select("*")
     .eq("category_id", categoryId)
-    .order("created_at", { ascending: true });
+    .order("name", { ascending: true });
 
   if (error) {
     console.error("Error fetching products", error);
     return [];
   }
 
-  return data ?? [];
+  return [...(data ?? [])].sort((a, b) =>
+    compareNamesWithTrailingNumber(a.name, b.name)
+  );
 };
 
 export const getProductWithCategory = async (
@@ -127,7 +130,7 @@ export const getAdminLists = async (): Promise<AdminLists> => {
     supabase
       .from("products")
       .select("*")
-      .order("created_at", { ascending: false }),
+      .order("name", { ascending: true }),
   ]);
 
   if (categoriesResult.error) {
@@ -140,6 +143,8 @@ export const getAdminLists = async (): Promise<AdminLists> => {
 
   return {
     categories: categoriesResult.data ?? [],
-    products: productsResult.data ?? [],
+    products: [...(productsResult.data ?? [])].sort((a, b) =>
+      compareNamesWithTrailingNumber(a.name, b.name)
+    ),
   };
 };
