@@ -30,6 +30,23 @@ alter table public.products
   add column if not exists price_6 int,
   add column if not exists price_8 int;
 
+create table if not exists public.subcategories (
+  id uuid primary key default uuid_generate_v4(),
+  category_id uuid not null references public.categories (id) on delete cascade,
+  name text not null,
+  slug text not null,
+  sort_order int default 0,
+  created_at timestamptz default now(),
+  unique (category_id, slug)
+);
+
+create table if not exists public.product_subcategories (
+  subcategory_id uuid not null references public.subcategories (id) on delete cascade,
+  product_id uuid not null references public.products (id) on delete cascade,
+  created_at timestamptz default now(),
+  primary key (subcategory_id, product_id)
+);
+
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   role text not null default 'customer',
@@ -39,6 +56,10 @@ create table if not exists public.profiles (
 create index if not exists categories_slug_idx on public.categories (slug);
 create index if not exists products_category_idx on public.products (category_id);
 create index if not exists products_active_idx on public.products (active);
+create index if not exists subcategories_category_idx on public.subcategories (category_id);
+create index if not exists subcategories_slug_idx on public.subcategories (slug);
+create index if not exists product_subcategories_product_idx
+  on public.product_subcategories (product_id);
 
 create or replace function public.handle_new_user()
 returns trigger as $$

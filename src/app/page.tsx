@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { getCategories } from "@/lib/data";
 import PersonalizedSection from "@/components/PersonalizedSection";
 import WholesalePersonalizedSection from "@/components/WholesalePersonalizedSection";
@@ -68,11 +68,10 @@ export default async function HomePage() {
       <section id="catalogo" className="w-full bg-white py-8">
         <div className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-2">
-            <p className="pill">Catalogo</p>
-            <h2 className="text-3xl font-semibold">Elegi tu categoria</h2>
+            <p className="pill">Catálogo</p>
+            <h2 className="text-3xl font-semibold">Elegí tu categoría</h2>
             <p className="text-slate-600">
-              Navega por las colecciones para ver todos los productos
-              disponibles.
+              Elegí entre las opciones que prefieras, envíanos tu pedido por WhatsApp y nosotros nos encargamos de todo lo demás.
             </p>
           </div>
 
@@ -120,3 +119,4 @@ export default async function HomePage() {
     </div>
   );
 }
+

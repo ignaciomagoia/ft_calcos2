@@ -8,6 +8,7 @@ import {
   formatCurrency,
   slugify,
 } from "@/lib/utils";
+import { SubcategoryManager } from "./SubcategoryManager";
 
 type Props = {
   initialCategories: Category[];
@@ -1877,6 +1878,8 @@ export const AdminDashboard = ({
           </div>
         </div>
       </section>
+
+      <SubcategoryManager categories={categories} products={products} />
     </div>
   );
 };

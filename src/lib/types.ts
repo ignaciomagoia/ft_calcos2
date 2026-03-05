@@ -20,6 +20,21 @@ export type Product = {
   category?: Pick<Category, "id" | "name" | "slug"> | null;
 };
 
+export type Subcategory = {
+  id: string;
+  category_id: string;
+  name: string;
+  slug: string;
+  sort_order: number | null;
+  created_at?: string | null;
+};
+
+export type ProductSubcategoryLink = {
+  subcategory_id: string;
+  product_id: string;
+  created_at?: string | null;
+};
+
 export type Profile = {
   id: string;
   role: string;

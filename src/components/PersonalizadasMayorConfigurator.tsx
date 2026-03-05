@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -42,8 +42,8 @@ const TYPE_OPTIONS: Array<{
   },
   {
     id: "holograficas",
-    label: "Holograficas",
-    waLabel: "Holograficas",
+    label: "Holográficas",
+    waLabel: "Holográficas",
     priceGroup: "holograficas_doradas",
   },
   {
@@ -103,7 +103,7 @@ const PersonalizedMayorConfigurator = () => {
 
   const handleOpenWhatsapp = () => {
     const message = [
-      "Pedido – Personalizadas por mayor 🧾",
+      "Pedido - Personalizadas por mayor 🧾",
       "",
       `Tipo: ${selectedType.waLabel}`,
       `Tamaño: ${selectedSize.waLabel}`,
@@ -155,7 +155,7 @@ const PersonalizedMayorConfigurator = () => {
                 Personalizadas por mayor
               </h1>
               <p className="text-sm text-slate-600">
-                Solo trabajamos por mayor. Cantidad mínima: 50 unidades.
+                Cantidad mínima: 50 unidades.
               </p>
             </div>
 
@@ -276,3 +276,6 @@ const PersonalizedMayorConfigurator = () => {
 };
 
 export default PersonalizedMayorConfigurator;
+
+
+

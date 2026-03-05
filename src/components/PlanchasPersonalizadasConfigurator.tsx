@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -28,7 +28,7 @@ const INFO_SLIDES = [
 const TYPE_OPTIONS: Array<{ id: SheetTypeId; label: string }> = [
   { id: "con_laca", label: "Con laca" },
   { id: "sin_laca", label: "Sin laca" },
-  { id: "holo", label: "Holograficas" },
+  { id: "holo", label: "Holográficas" },
 ];
 
 const SIZE_OPTIONS: Array<{ id: SheetSizeId; label: string; waLabel: string }> = [
@@ -135,7 +135,7 @@ const PlanchasPersonalizadasConfigurator = () => {
 
   const handleOpenWhatsapp = () => {
     const message = [
-      "Pedido – Planchas personalizadas 🧾",
+      "Pedido - Planchas personalizadas 🧾",
       "",
       `Tipo: ${selectedType.label}`,
       `Tamaño: ${selectedSize.waLabel}`,
@@ -245,10 +245,6 @@ const PlanchasPersonalizadasConfigurator = () => {
               <h1 className="text-3xl font-semibold text-slate-900">
                 Planchas personalizadas
               </h1>
-              <p className="text-sm text-slate-600">
-                Te recordamos que tenemos una demora de 7 a 10 días hábiles, si
-                están antes te avisamos (:
-              </p>
             </div>
 
             <fieldset className="mt-6 space-y-3">
@@ -388,3 +384,4 @@ const ArrowIcon = ({ direction }: { direction: "left" | "right" }) => (
 );
 
 export default PlanchasPersonalizadasConfigurator;
+

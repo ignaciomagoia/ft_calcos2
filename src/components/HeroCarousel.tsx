@@ -23,7 +23,7 @@ const slides: Slide[] = [
     layout: "split",
     badge: "FT CALCOS",
     title: "Pegá tu estilo",
-    subtitle: "Calcos de vinilo premium super resistentes ✨",
+    subtitle: "Calcos de vinilo premium súper resistentes para que decores tus cosas, potencies tu marca y lleves tus recuerdos con vos 🤩",
     image: "/termoprincipal.png",
     imageAlt: "Producto destacado FT Calcos",
     showCtas: true,
@@ -315,3 +315,4 @@ const ArrowIcon = ({ direction }: { direction: "left" | "right" }) => (
 );
 
 export default HeroCarousel;
+

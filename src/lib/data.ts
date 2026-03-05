@@ -1,6 +1,13 @@
 import { type User } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "./supabaseServer";
-import type { AdminLists, Category, Product, Profile } from "./types";
+import type {
+  AdminLists,
+  Category,
+  Product,
+  ProductSubcategoryLink,
+  Profile,
+  Subcategory,
+} from "./types";
 import { compareNamesWithTrailingNumber } from "./utils";
 
 const orderCategories = (query: any) =>
@@ -8,6 +15,14 @@ const orderCategories = (query: any) =>
     "name",
     { ascending: true }
   );
+
+const orderSubcategories = (query: any) =>
+  query.order("sort_order", { ascending: true, nullsFirst: false }).order(
+    "name",
+    { ascending: true }
+  );
+
+const isMissingTableError = (error: any) => error?.code === "42P01";
 
 export const getCategories = async (): Promise<Category[]> => {
   const supabase = await createSupabaseServerClient();
@@ -59,6 +74,58 @@ export const getProductsByCategoryId = async (
   return [...(data ?? [])].sort((a, b) =>
     compareNamesWithTrailingNumber(a.name, b.name)
   );
+};
+
+type CategorySubcategoryFilters = {
+  subcategories: Subcategory[];
+  links: ProductSubcategoryLink[];
+};
+
+export const getCategorySubcategoryFilters = async (
+  categoryId: string
+): Promise<CategorySubcategoryFilters> => {
+  const supabase = await createSupabaseServerClient();
+
+  const subcategoriesResult = await orderSubcategories(
+    supabase.from("subcategories").select("*").eq("category_id", categoryId)
+  );
+
+  if (subcategoriesResult.error) {
+    if (!isMissingTableError(subcategoriesResult.error)) {
+      console.error(
+        "Error fetching subcategories for category",
+        subcategoriesResult.error
+      );
+    }
+    return { subcategories: [], links: [] };
+  }
+
+  const subcategories: Subcategory[] = (subcategoriesResult.data ??
+    []) as Subcategory[];
+  if (subcategories.length === 0) {
+    return { subcategories: [], links: [] };
+  }
+
+  const subcategoryIds = subcategories.map((subcategory) => subcategory.id);
+  const linksResult = await supabase
+    .from("product_subcategories")
+    .select("subcategory_id, product_id")
+    .in("subcategory_id", subcategoryIds);
+
+  if (linksResult.error) {
+    if (!isMissingTableError(linksResult.error)) {
+      console.error(
+        "Error fetching product subcategory links for category",
+        linksResult.error
+      );
+    }
+    return { subcategories, links: [] };
+  }
+
+  return {
+    subcategories,
+    links: linksResult.data ?? [],
+  };
 };
 
 export const getProductWithCategory = async (
