@@ -224,14 +224,14 @@ const HeroCarousel = () => {
                 <div
                   className={`w-full ${
                     slide.id === "slide-2"
-                      ? "max-w-5xl flex-1 min-h-[320px] sm:flex-none"
+                      ? "max-w-5xl flex-1 min-h-[280px] sm:flex-none"
                       : "max-w-4xl"
                   }`}
                 >
                   <div
                     className={`relative w-full ${
                       slide.id === "slide-2"
-                        ? "h-full w-[152%] -ml-[26%] sm:ml-0 sm:w-full sm:-mt-4 sm:h-[320px] lg:-mt-24 lg:h-[490px]"
+                        ? "h-full w-[128%] -ml-[14%] sm:ml-0 sm:w-full sm:-mt-4 sm:h-[320px] lg:-mt-24 lg:h-[490px]"
                         : "-mt-2 h-[260px] sm:-mt-4 sm:h-[320px] lg:h-[380px]"
                     }`}
                   >
@@ -244,7 +244,7 @@ const HeroCarousel = () => {
                           sizes="100vw"
                           className="rounded-[26px] object-contain object-bottom drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in sm:hidden"
                           style={{
-                            transform: "translateY(24px) scale(1.58)",
+                            transform: "translateY(0px) scale(1.36)",
                             transformOrigin: "bottom center",
                           }}
                         />
