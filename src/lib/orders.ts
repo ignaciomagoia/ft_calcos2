@@ -80,28 +80,15 @@ const normalizeOrderIntentInput = (input: OrderIntentInput) => {
   };
 };
 
-export const createOrderIntent = async (input: OrderIntentInput): Promise<Order> => {
+export const createOrderIntent = async (input: OrderIntentInput): Promise<void> => {
   const supabase = createSupabaseBrowserClient();
   const payload = normalizeOrderIntentInput(input);
 
-  const { data, error } = await supabase
-    .from("orders")
-    .insert(payload)
-    .select(
-      "id, created_at, summary, total, whatsapp_message, order_details, source"
-    )
-    .single();
+  const { error } = await supabase.from("orders").insert(payload);
 
   if (error) {
     throw new Error(error.message);
   }
-
-  const order = parseOrderRow(data);
-  if (!order) {
-    throw new Error("No se pudo guardar el pedido.");
-  }
-
-  return order;
 };
 
 export const listOrders = async (): Promise<Order[]> => {
