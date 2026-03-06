@@ -86,9 +86,10 @@ export const buildWhatsAppCheckoutMessage = ({
 
     if (hasSize) {
       parts.push(`tam: ${item.sizeCm} cm`);
-      if (item.quantity > 1) {
-        parts.push(`cant: ${item.quantity}`);
-      }
+    }
+
+    if (item.quantity > 1) {
+      parts.push(`cant: ${item.quantity}`);
     }
 
     return parts.join(" | ");
