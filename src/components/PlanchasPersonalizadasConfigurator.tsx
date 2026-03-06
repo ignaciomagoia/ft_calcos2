@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createOrderIntent } from "@/lib/orders";
+import { openWhatsAppConversation } from "@/lib/whatsapp";
 
 const WA_NUMBER = "3516183951";
 
@@ -152,10 +153,6 @@ const PlanchasPersonalizadasConfigurator = () => {
       "Importante: falta que te envíe la foto/diseño que quiero ✅",
     ].join("\n");
 
-    const url = new URL("https://api.whatsapp.com/send");
-    url.searchParams.set("phone", WA_NUMBER);
-    url.searchParams.set("text", message);
-
     try {
       await createOrderIntent({
         summary: `Planchas: ${selectedType.label} | ${selectedSize.waLabel} | ${quantity}u`,
@@ -177,7 +174,7 @@ const PlanchasPersonalizadasConfigurator = () => {
         },
       });
 
-      window.open(url.toString(), "_blank", "noopener,noreferrer");
+      openWhatsAppConversation({ phone: WA_NUMBER, message });
     } catch (submitError: unknown) {
       setSubmitError(
         submitError instanceof Error

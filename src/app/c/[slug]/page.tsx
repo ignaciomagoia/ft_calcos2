@@ -55,7 +55,7 @@ export default async function CategoryPage({ params }: Props) {
         </Link>
 
         <header className="space-y-3">
-          <p className="pill">Categor\u00eda</p>
+          <p className="pill">{"Categor\u00eda"}</p>
           <h1 className="text-4xl font-semibold">{category.name}</h1>
           <p className="text-slate-600">{categoryDescription}</p>
         </header>

@@ -25,7 +25,10 @@ import {
   formatCurrency,
 } from "@/lib/utils";
 import { createOrderIntent } from "@/lib/orders";
-import { buildWhatsAppCheckoutPayload } from "@/lib/whatsapp";
+import {
+  buildWhatsAppCheckoutPayload,
+  openCheckoutWhatsAppConversation,
+} from "@/lib/whatsapp";
 
 const transferAlias =
   process.env.NEXT_PUBLIC_TRANSFER_ALIAS ?? "TRANSFER_ALIAS";
@@ -255,7 +258,7 @@ export default function CartPage() {
         message: "Listo, abrimos WhatsApp para enviar tu pedido.",
       });
 
-      window.open(checkoutPayload.url, "_blank", "noopener,noreferrer");
+      openCheckoutWhatsAppConversation(checkoutPayload.message);
     } catch (error: unknown) {
       const message =
         error instanceof Error

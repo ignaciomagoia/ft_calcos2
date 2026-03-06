@@ -93,7 +93,7 @@ const HeroCarousel = () => {
     <section className="relative isolate -mt-16 overflow-hidden rounded-none border-b border-slate-200 bg-white pt-16 shadow-none sm:-mt-20 sm:rounded-[32px] sm:border sm:pt-20 sm:shadow-2xl">
       <div
         ref={viewportRef}
-        className="no-scrollbar flex h-[520px] items-stretch snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-[var(--color-primary)] scroll-smooth sm:h-[560px] lg:h-[600px]"
+        className="no-scrollbar flex h-[520px] items-stretch snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-[var(--color-secondary)] scroll-smooth sm:h-[560px] lg:h-[600px]"
         tabIndex={0}
         onKeyDown={onKeyDown}
         role="region"
@@ -112,7 +112,7 @@ const HeroCarousel = () => {
             aria-label={`${index + 1} de ${totalSlides}`}
           >
             {slide.layout === "split" ? (
-              <div className="grid h-full grid-cols-2 bg-[var(--color-primary)]">
+              <div className="grid h-full grid-cols-2 bg-[var(--color-secondary)]">
                 <div className="relative flex h-full flex-col justify-start gap-6 px-6 py-6 text-white sm:px-10 sm:py-12 lg:justify-between lg:gap-10">
                   <Sparkle className="pointer-events-none absolute bottom-16 right-8 hidden rotate-12 text-white/40 sm:block" />
 
@@ -175,7 +175,7 @@ const HeroCarousel = () => {
               </div>
             ) : (
               <div
-                className={`flex h-full flex-col items-center justify-start bg-[var(--color-primary)] px-6 py-8 text-white sm:px-10 sm:py-10 ${
+                className={`flex h-full flex-col items-center justify-start bg-[var(--color-secondary)] px-6 py-8 text-white sm:px-10 sm:py-10 ${
                   slide.id === "slide-2" ? "gap-3 sm:gap-5" : "gap-5"
                 }`}
               >
