@@ -142,6 +142,7 @@ export const ProductDetail = ({ product }: Props) => {
             product={product}
             unitPrice={unitPrice}
             sizeCm={selectedSizeCm}
+            sizeOptions={sizeOptions}
             quantity={quantity}
             disabled={hasSizeOptions && !selectedSizeCm}
             disabledLabel="Eleg\u00ed tama\u00f1o"

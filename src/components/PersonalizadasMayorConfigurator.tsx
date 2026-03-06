@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { createOrderIntent } from "@/lib/orders";
 
 const WA_NUMBER = "3516183951";
 
@@ -91,6 +92,8 @@ const PersonalizedMayorConfigurator = () => {
   );
   const [stickerSize, setStickerSize] = useState<StickerSizeId>("s4");
   const [quantity, setQuantity] = useState<StickerQuantity>(50);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const selectedType = TYPE_OPTIONS.find((option) => option.id === stickerType)!;
   const selectedSize = SIZE_OPTIONS.find((option) => option.id === stickerSize)!;
@@ -101,7 +104,10 @@ const PersonalizedMayorConfigurator = () => {
   );
   const unitPrice = useMemo(() => total / quantity, [quantity, total]);
 
-  const handleOpenWhatsapp = () => {
+  const handleOpenWhatsapp = async () => {
+    setSubmitError("");
+    setIsSubmitting(true);
+
     const message = [
       "Pedido - Personalizadas por mayor 🧾",
       "",
@@ -109,6 +115,7 @@ const PersonalizedMayorConfigurator = () => {
       `Tamaño: ${selectedSize.waLabel}`,
       `Cantidad: ${quantity}`,
       `Total: ${formatArs(total)}`,
+      "Alias: efete.calcos",
       "",
       "Importante: falta que te envíe la foto/diseño del calco que quiero ✅",
     ].join("\n");
@@ -116,23 +123,60 @@ const PersonalizedMayorConfigurator = () => {
     const url = new URL("https://api.whatsapp.com/send");
     url.searchParams.set("phone", WA_NUMBER);
     url.searchParams.set("text", message);
-    window.open(url.toString(), "_blank", "noopener,noreferrer");
+
+    try {
+      await createOrderIntent({
+        summary: `Mayor: ${selectedType.waLabel} | ${selectedSize.waLabel} | ${quantity}u`,
+        total,
+        whatsappMessage: message,
+        source: "web",
+        orderDetails: {
+          flow: "personalizadas_por_mayor",
+          items: [
+            {
+              name: "Calco personalizado por mayor",
+              type: selectedType.waLabel,
+              size: selectedSize.waLabel,
+              quantity,
+              unitPrice: Math.round(unitPrice),
+              lineTotal: total,
+            },
+          ],
+        },
+      });
+
+      window.open(url.toString(), "_blank", "noopener,noreferrer");
+    } catch (submitError: unknown) {
+      setSubmitError(
+        submitError instanceof Error
+          ? submitError.message
+          : "No se pudo guardar el pedido. Reintentá."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <>
       <section className="w-full bg-white py-4 sm:py-6">
         <div className="mx-auto w-full max-w-4xl px-0 sm:px-6 lg:px-8">
-          <div className="overflow-hidden rounded-none bg-white sm:rounded-2xl">
-            <Image
-              src="/personalizadamarca.jpeg"
-              alt="Personalizadas por mayor"
-              width={2226}
-              height={1696}
-              sizes="(max-width: 639px) 100vw, (max-width: 1023px) 100vw, 1100px"
-              className="block h-auto w-full select-none object-contain object-center"
-              priority
-            />
+          <div className="overflow-hidden rounded-none bg-[var(--color-secondary)] sm:rounded-2xl">
+            <div className="px-4 pb-5 pt-8 sm:px-8 sm:pb-8 sm:pt-10">
+              <p className="text-center whitespace-nowrap text-[0.95rem] font-extrabold leading-tight tracking-tight text-[var(--color-primary)] sm:text-[1.65rem]">
+                PERSONALIZADAS PARA TU MARCA
+              </p>
+
+              <Image
+                src="/personalizadaspormayor2.png"
+                alt="Personalizadas para tu marca"
+                width={540}
+                height={540}
+                sizes="(max-width: 639px) 90vw, (max-width: 1023px) 80vw, 540px"
+                className="mx-auto mt-3 block h-auto w-full max-w-[285px] max-h-[420px] select-none object-contain object-center sm:mt-2 sm:max-w-[320px] sm:max-h-[470px]"
+                priority
+              />
+            </div>
           </div>
 
           <div className="mt-4 flex justify-center">
@@ -257,9 +301,10 @@ const PersonalizedMayorConfigurator = () => {
               <button
                 type="button"
                 onClick={handleOpenWhatsapp}
+                disabled={isSubmitting}
                 className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)]"
               >
-                Consultar por WhatsApp
+                {isSubmitting ? "Guardando pedido..." : "Consultar por WhatsApp"}
               </button>
               <Link
                 href="/"
@@ -268,6 +313,9 @@ const PersonalizedMayorConfigurator = () => {
                 Volver al inicio
               </Link>
             </div>
+            {submitError ? (
+              <p className="mt-3 text-sm text-rose-600">{submitError}</p>
+            ) : null}
           </div>
         </div>
       </section>

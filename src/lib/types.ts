@@ -3,6 +3,7 @@ export type Category = {
   name: string;
   slug: string;
   image_url: string | null;
+  description?: string | null;
   sort_order: number | null;
   created_at?: string | null;
 };

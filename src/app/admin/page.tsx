@@ -17,12 +17,20 @@ export default async function AdminPage() {
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-md space-y-6">
           <h1 className="text-3xl font-semibold">Panel EFETE</h1>
-          <Link
-            href="/admin/coupons"
-            className="inline-flex rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-          >
-            Admin &gt; Cupones
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/coupons"
+              className="inline-flex rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Admin &gt; Cupones
+            </Link>
+            <Link
+              href="/admin/orders"
+              className="inline-flex rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Admin &gt; Pedidos
+            </Link>
+          </div>
           <Suspense fallback={null}>
             <LoginForm />
           </Suspense>
@@ -47,12 +55,18 @@ export default async function AdminPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex justify-end gap-2">
         <Link
           href="/admin/coupons"
           className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
         >
           Admin &gt; Cupones
+        </Link>
+        <Link
+          href="/admin/orders"
+          className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+        >
+          Admin &gt; Pedidos
         </Link>
       </div>
       <Suspense fallback={<p>Cargando panel...</p>}>

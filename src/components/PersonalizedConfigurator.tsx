@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { createOrderIntent } from "@/lib/orders";
 
 const WA_NUMBER = "3516183951";
 const ICON_WAVE = String.fromCodePoint(0x1f44b);
@@ -51,6 +52,8 @@ const PersonalizedConfigurator = () => {
   const [vinyl, setVinyl] = useState<VinylValue | "">("");
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const slideRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -113,7 +116,7 @@ const PersonalizedConfigurator = () => {
     setQuantity(Math.min(999, Math.max(minQuantity, Math.floor(nextValue))));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!size || !background || !vinyl || quantity < minQuantity) {
@@ -126,6 +129,8 @@ const PersonalizedConfigurator = () => {
     }
 
     setError("");
+    setSubmitError("");
+    setIsSubmitting(true);
 
     const message = [
       `Hola! ${ICON_WAVE} Quiero un calco personalizado.`,
@@ -133,6 +138,7 @@ const PersonalizedConfigurator = () => {
       `${ICON_FRAME} Fondo: ${background}`,
       `${ICON_TAG} Vinilo: ${vinyl}`,
       `${ICON_NUMBERS} Cantidad: ${quantity}`,
+      "Alias: efete.calcos",
       "",
       `${ICON_CHECK} Me falta enviarte la foto/diseño del calco que quiero (te la mando por acá ahora).`,
       "¿Me confirmás precio y tiempo de entrega?",
@@ -141,7 +147,37 @@ const PersonalizedConfigurator = () => {
     const url = new URL("https://api.whatsapp.com/send");
     url.searchParams.set("phone", WA_NUMBER);
     url.searchParams.set("text", message);
-    window.open(url.toString(), "_blank", "noopener,noreferrer");
+
+    try {
+      await createOrderIntent({
+        summary: `Personalizado: ${size} | ${vinyl} | ${quantity} unidad(es)`,
+        total: 0,
+        whatsappMessage: message,
+        source: "web",
+        orderDetails: {
+          flow: "personalizado",
+          items: [
+            {
+              name: "Calco personalizado",
+              size,
+              background,
+              vinyl,
+              quantity,
+            },
+          ],
+        },
+      });
+
+      window.open(url.toString(), "_blank", "noopener,noreferrer");
+    } catch (submitError: unknown) {
+      setSubmitError(
+        submitError instanceof Error
+          ? submitError.message
+          : "No se pudo guardar el pedido. Reintentá."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -239,7 +275,7 @@ const PersonalizedConfigurator = () => {
                 Configurá tu calco personalizado
               </h1>
               <p className="text-slate-600">
-                Elegí las opciones y te abrimos WhatsApp con el pedido listo.
+                Elegí las opciones y aceptá para que te redirijamos a WhatsApp para finalizar tu pedido.
               </p>
             </div>
 
@@ -372,13 +408,17 @@ const PersonalizedConfigurator = () => {
               </div>
 
               {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+              {submitError ? (
+                <p className="text-sm text-rose-600">{submitError}</p>
+              ) : null}
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 !text-white text-sm font-semibold shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 >
-                  Pedir por WhatsApp
+                  {isSubmitting ? "Guardando pedido..." : "Pedir por WhatsApp"}
                 </button>
                 <Link
                   href="/"

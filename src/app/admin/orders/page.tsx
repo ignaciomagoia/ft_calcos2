@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { CouponsAdminPanel } from "@/components/admin/CouponsAdminPanel";
 import { LoginForm } from "@/components/admin/LoginForm";
+import { OrdersAdminPanel } from "@/components/admin/OrdersAdminPanel";
 import { getSessionProfile } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminCouponsPage() {
+export default async function AdminOrdersPage() {
   const { user, profile } = await getSessionProfile();
 
   if (!user) {
@@ -44,25 +44,33 @@ export default async function AdminCouponsPage() {
             Admin
           </Link>
           <span className="mx-2">/</span>
-          <span className="font-medium text-slate-900">Cupones</span>
+          <span className="font-medium text-slate-900">Pedidos</span>
         </nav>
 
-        <header>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-3xl font-semibold">Admin &gt; Cupones</h1>
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-3xl font-semibold">Admin &gt; Pedidos</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Pedidos generados desde la web antes de abrir WhatsApp.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
             <Link
-              href="/admin/orders"
+              href="/admin/coupons"
               className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Ir a Pedidos
+              Ir a Cupones
+            </Link>
+            <Link
+              href="/admin"
+              className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Volver a Admin
             </Link>
           </div>
-          <p className="mt-1 text-sm text-slate-500">
-            Gestiona cupones guardados en Supabase.
-          </p>
         </header>
 
-        <CouponsAdminPanel />
+        <OrdersAdminPanel />
       </div>
     </div>
   );

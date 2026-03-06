@@ -9,6 +9,7 @@ type Props = {
   product: Pick<Product, "id" | "name" | "image_url">;
   unitPrice: number;
   sizeCm?: ProductSizeCm | null;
+  sizeOptions?: Array<{ sizeCm: ProductSizeCm; price: number }>;
   quantity?: number;
   variant?: "primary" | "secondary";
   fullWidth?: boolean;
@@ -32,6 +33,7 @@ export const AddToCartButton = ({
   product,
   unitPrice,
   sizeCm = null,
+  sizeOptions = [],
   quantity = 1,
   variant = "primary",
   fullWidth = true,
@@ -60,6 +62,7 @@ export const AddToCartButton = ({
           unitPrice,
           price: unitPrice,
           sizeCm,
+          sizeOptions: sizeOptions.length > 0 ? sizeOptions : undefined,
           imageUrl: product.image_url,
         },
         quantity

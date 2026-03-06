@@ -19,6 +19,7 @@ type CategoryFormState = {
   id?: string;
   name: string;
   image_url: string;
+  description: string;
   file?: File | null;
   sort_order: string;
 };
@@ -46,6 +47,7 @@ type BulkPriceFormState = PriceFieldsState;
 const emptyCategoryForm: CategoryFormState = {
   name: "",
   image_url: "",
+  description: "",
   file: null,
   sort_order: "0",
 };
@@ -658,6 +660,7 @@ export const AdminDashboard = ({
       name: trimmedName,
       slug,
       image_url: imageUrl || null,
+      description: categoryForm.description.trim() || null,
       sort_order: Number(categoryForm.sort_order ?? 0),
     };
 
@@ -693,6 +696,7 @@ export const AdminDashboard = ({
       id: category.id,
       name: category.name,
       image_url: category.image_url ?? "",
+      description: category.description ?? "",
       file: null,
       sort_order: String(category.sort_order ?? 0),
     });
@@ -1169,6 +1173,18 @@ export const AdminDashboard = ({
               }
               className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
             />
+            <textarea
+              placeholder="Texto de la categoría (se muestra en la página pública)"
+              value={categoryForm.description}
+              onChange={(event) =>
+                setCategoryForm((prev) => ({
+                  ...prev,
+                  description: event.target.value,
+                }))
+              }
+              rows={3}
+              className="w-full resize-y rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
+            />
             <input
               type="number"
               placeholder="Orden"
@@ -1247,6 +1263,11 @@ export const AdminDashboard = ({
                     <div className="min-w-0">
                     <p className="font-semibold">{category.name}</p>
                     <p className="text-xs text-slate-400">{category.slug}</p>
+                    {category.description ? (
+                      <p className="mt-1 text-xs text-slate-500">
+                        {category.description}
+                      </p>
+                    ) : null}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-xs font-semibold">

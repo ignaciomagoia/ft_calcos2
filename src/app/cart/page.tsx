@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CouponPanel } from "@/components/cart/CouponPanel";
-import { useCartStore } from "@/lib/cartStore";
+import { useCartStore, type CartItem } from "@/lib/cartStore";
 import {
   clearAppliedCoupon,
   getAppliedCoupon,
@@ -19,8 +19,13 @@ import {
   saveLastOrder,
   type LastOrder,
 } from "@/lib/cartCheckout";
-import { buildImagePlaceholder, formatCurrency } from "@/lib/utils";
-import { buildWhatsAppCheckoutUrl } from "@/lib/whatsapp";
+import {
+  buildImagePlaceholder,
+  compareNamesWithTrailingNumber,
+  formatCurrency,
+} from "@/lib/utils";
+import { createOrderIntent } from "@/lib/orders";
+import { buildWhatsAppCheckoutPayload } from "@/lib/whatsapp";
 
 const transferAlias =
   process.env.NEXT_PUBLIC_TRANSFER_ALIAS ?? "TRANSFER_ALIAS";
@@ -30,16 +35,33 @@ type Feedback = {
   message: string;
 };
 
+const buildCartOrderSummary = (items: CartItem[]) => {
+  if (items.length === 0) return "Pedido sin productos";
+
+  const preview = items
+    .slice(0, 3)
+    .map((item) => {
+      const sizeLabel = typeof item.sizeCm === "number" ? ` (${item.sizeCm} cm)` : "";
+      return `${item.name}${sizeLabel} x${item.quantity}`;
+    })
+    .join(", ");
+
+  const extra = items.length > 3 ? ` +${items.length - 3} mas` : "";
+  return `${items.length} producto(s): ${preview}${extra}`;
+};
+
 export default function CartPage() {
   const items = useCartStore((state) => state.items);
   const removeItem = useCartStore((state) => state.removeItem);
   const setQty = useCartStore((state) => state.setQty);
+  const setSize = useCartStore((state) => state.setSize);
   const clear = useCartStore((state) => state.clear);
 
   const [couponInput, setCouponInput] = useState("");
   const [couponFeedback, setCouponFeedback] = useState<Feedback | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [isApplying, setIsApplying] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutFeedback, setCheckoutFeedback] = useState<Feedback | null>(null);
   const [lastOrder, setLastOrder] = useState<LastOrder | null>(null);
 
@@ -95,6 +117,20 @@ export default function CartPage() {
 
   const getUnitPrice = (item: (typeof items)[number]) =>
     item.unitPrice ?? item.price ?? 0;
+  const sortedItems = useMemo(
+    () =>
+      [...items].sort((a, b) => {
+        const byName = compareNamesWithTrailingNumber(a.name, b.name);
+        if (byName !== 0) return byName;
+
+        const aSize = typeof a.sizeCm === "number" ? a.sizeCm : Number.MAX_SAFE_INTEGER;
+        const bSize = typeof b.sizeCm === "number" ? b.sizeCm : Number.MAX_SAFE_INTEGER;
+        if (aSize !== bSize) return aSize - bSize;
+
+        return a.id.localeCompare(b.id, "es", { sensitivity: "base" });
+      }),
+    [items]
+  );
 
   const subtotal = useMemo(
     () =>
@@ -154,8 +190,8 @@ export default function CartPage() {
     setCouponInput("");
   };
 
-  const checkoutUrl = buildWhatsAppCheckoutUrl({
-    items,
+  const checkoutPayload = buildWhatsAppCheckoutPayload({
+    items: sortedItems,
     total: totalWithDiscount,
     subtotal,
     discountAmount,
@@ -164,7 +200,7 @@ export default function CartPage() {
     transferAlias,
   });
 
-  const handleCheckoutWhatsapp = () => {
+  const handleCheckoutWhatsapp = async () => {
     if (items.length === 0) return;
 
     const confirmed = window.confirm(
@@ -172,28 +208,66 @@ export default function CartPage() {
     );
     if (!confirmed) return;
 
+    setIsCheckingOut(true);
+
     const orderSnapshot: LastOrder = {
-      items: items.map((item) => ({ ...item })),
+      items: sortedItems.map((item) => ({ ...item })),
       subtotal,
       total: totalWithDiscount,
       timestamp: new Date().toISOString(),
       coupon: appliedCoupon,
     };
 
-    saveLastOrder(orderSnapshot);
-    setLastOrder(orderSnapshot);
+    try {
+      await createOrderIntent({
+        summary: buildCartOrderSummary(sortedItems),
+        total: totalWithDiscount,
+        whatsappMessage: checkoutPayload.message,
+        source: "web",
+        orderDetails: {
+          items: sortedItems.map((item) => ({
+            id: item.id,
+            productId: item.productId,
+            name: item.name,
+            sizeCm: item.sizeCm ?? null,
+            quantity: item.quantity,
+            unitPrice: getUnitPrice(item),
+            lineTotal: getUnitPrice(item) * item.quantity,
+          })),
+          subtotal: Math.round(subtotal),
+          discountPercent,
+          discountAmount: Math.round(discountAmount),
+          total: Math.round(totalWithDiscount),
+          couponCode: appliedCoupon?.code ?? null,
+        },
+      });
 
-    clearPersistedCart();
-    setAppliedCoupon(null);
-    setCouponInput("");
-    setCouponFeedback(null);
+      saveLastOrder(orderSnapshot);
+      setLastOrder(orderSnapshot);
 
-    setCheckoutFeedback({
-      type: "success",
-      message: "Listo, abrimos WhatsApp para enviar tu pedido.",
-    });
+      clearPersistedCart();
+      setAppliedCoupon(null);
+      setCouponInput("");
+      setCouponFeedback(null);
 
-    window.location.assign(checkoutUrl);
+      setCheckoutFeedback({
+        type: "success",
+        message: "Listo, abrimos WhatsApp para enviar tu pedido.",
+      });
+
+      window.open(checkoutPayload.url, "_blank", "noopener,noreferrer");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar el pedido. Reintenta de nuevo.";
+      setCheckoutFeedback({
+        type: "error",
+        message,
+      });
+    } finally {
+      setIsCheckingOut(false);
+    }
   };
 
   const handleRecoverLastOrder = () => {
@@ -267,7 +341,7 @@ export default function CartPage() {
         ) : (
           <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
             <div className="space-y-4">
-              {items.map((item) => (
+              {sortedItems.map((item) => (
                 <article
                   key={item.id}
                   className="card flex flex-col gap-4 rounded-3xl p-4 sm:flex-row sm:items-center"
@@ -289,11 +363,30 @@ export default function CartPage() {
                         {formatCurrency(getUnitPrice(item) * item.quantity)}
                       </p>
                     </div>
-                    {item.sizeCm && (
+                    {item.sizeOptions && item.sizeOptions.length > 0 ? (
+                      <div className="flex flex-wrap items-center gap-2 text-xs">
+                        <span className="font-medium text-slate-500">Tamano:</span>
+                        <select
+                          value={item.sizeCm ?? ""}
+                          onChange={(event) =>
+                            setSize(item.id, Number(event.target.value) as 4 | 6 | 8)
+                          }
+                          className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 focus:border-slate-400 focus:outline-none"
+                        >
+                          {[...item.sizeOptions]
+                            .sort((a, b) => a.sizeCm - b.sizeCm)
+                            .map((option) => (
+                              <option key={`${item.id}-${option.sizeCm}`} value={option.sizeCm}>
+                                {`${option.sizeCm} cm - ${formatCurrency(option.price)}`}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    ) : item.sizeCm ? (
                       <p className="text-xs font-medium text-slate-500">
-                        {`Tama\u00f1o: ${item.sizeCm} cm`}
+                        {`Tamano: ${item.sizeCm} cm`}
                       </p>
-                    )}
+                    ) : null}
                     <p className="text-xs text-slate-500">
                       Unitario: {formatCurrency(getUnitPrice(item))}
                     </p>
@@ -381,9 +474,9 @@ export default function CartPage() {
                 type="button"
                 className="mt-2 inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-white transition hover:bg-[var(--color-primary-dark)] disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={handleCheckoutWhatsapp}
-                disabled={items.length === 0}
+                disabled={items.length === 0 || isCheckingOut}
               >
-                Finalizar por WhatsApp
+                {isCheckingOut ? "Guardando pedido..." : "Finalizar por WhatsApp"}
               </button>
 
               {checkoutFeedback && (

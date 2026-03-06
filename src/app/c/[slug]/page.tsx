@@ -19,10 +19,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const category = await getCategoryBySlug(slug);
 
   if (!category) {
-    return { title: "Categoría no encontrada" };
+    return { title: "Categor\u00eda no encontrada" };
   }
 
-  return { title: `${category.name} | Catálogo` };
+  return { title: `${category.name} | Cat\u00e1logo` };
 }
 
 export default async function CategoryPage({ params }: Props) {
@@ -38,6 +38,12 @@ export default async function CategoryPage({ params }: Props) {
     getCategorySubcategoryFilters(category.id),
   ]);
 
+  const categoryDescription =
+    typeof category.description === "string" &&
+    category.description.trim().length > 0
+      ? category.description
+      : "Agreg\u00e1 productos desde esta colecci\u00f3n. Los ver\u00e1s en tu carrito.";
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
       <div className="space-y-8">
@@ -49,11 +55,9 @@ export default async function CategoryPage({ params }: Props) {
         </Link>
 
         <header className="space-y-3">
-          <p className="pill">Categoría</p>
+          <p className="pill">Categor\u00eda</p>
           <h1 className="text-4xl font-semibold">{category.name}</h1>
-          <p className="text-slate-600">
-            Agregá productos desde esta colección. Los verás en tu carrito.
-          </p>
+          <p className="text-slate-600">{categoryDescription}</p>
         </header>
 
         <CategoryProductsGrid

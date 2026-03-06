@@ -206,6 +206,7 @@ export const ProductCard = ({ product }: Props) => {
                     product={product}
                     unitPrice={unitPrice ?? 0}
                     sizeCm={selectedSizeCm}
+                    sizeOptions={sizeOptions}
                     quantity={quantity}
                     onAdded={handleAdded}
                   />

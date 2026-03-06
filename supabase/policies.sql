@@ -16,6 +16,7 @@ alter table public.profiles enable row level security;
 alter table public.coupons enable row level security;
 alter table public.subcategories enable row level security;
 alter table public.product_subcategories enable row level security;
+alter table public.orders enable row level security;
 
 -- categories
 drop policy if exists "public select categories" on public.categories;
@@ -169,5 +170,24 @@ create policy "admin insert coupons"
 drop policy if exists "admin delete coupons" on public.coupons;
 create policy "admin delete coupons"
   on public.coupons
+  for delete
+  using (public.is_admin(auth.uid()));
+
+-- orders
+drop policy if exists "public insert orders" on public.orders;
+create policy "public insert orders"
+  on public.orders
+  for insert
+  with check (source = 'web');
+
+drop policy if exists "admin select orders" on public.orders;
+create policy "admin select orders"
+  on public.orders
+  for select
+  using (public.is_admin(auth.uid()));
+
+drop policy if exists "admin delete orders" on public.orders;
+create policy "admin delete orders"
+  on public.orders
   for delete
   using (public.is_admin(auth.uid()));

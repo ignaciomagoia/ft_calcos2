@@ -1,7 +1,8 @@
 import type { CartItem } from "./cartStore";
-import { formatCurrency } from "./utils";
+import { compareNamesWithTrailingNumber, formatCurrency } from "./utils";
 
 const WHATSAPP_NUMBER = "5493516183951";
+const ICON_HEART_HANDS = String.fromCodePoint(0x1faf6);
 
 type WhatsAppPayload = {
   items: CartItem[];
@@ -13,46 +14,69 @@ type WhatsAppPayload = {
   transferAlias: string;
 };
 
-export const buildWhatsAppCheckoutUrl = ({
+export const buildWhatsAppCheckoutMessage = ({
   items,
   total,
-  subtotal,
-  discountAmount = 0,
-  discountPercent = 0,
-  couponCode,
-  transferAlias,
+  subtotal: _subtotal,
+  discountAmount: _discountAmount = 0,
+  discountPercent: _discountPercent = 0,
+  couponCode: _couponCode,
+  transferAlias: _transferAlias,
 }: WhatsAppPayload) => {
-  const alias = transferAlias || "TRANSFER_ALIAS";
-  const hasDiscount = discountAmount > 0 && discountPercent > 0;
+  const alias = "efete.calcos";
+  const orderedItems = [...items].sort((a, b) => {
+    const byName = compareNamesWithTrailingNumber(a.name, b.name);
+    if (byName !== 0) return byName;
+
+    const aSize =
+      typeof a.sizeCm === "number" ? a.sizeCm : Number.MAX_SAFE_INTEGER;
+    const bSize =
+      typeof b.sizeCm === "number" ? b.sizeCm : Number.MAX_SAFE_INTEGER;
+    if (aSize !== bSize) return aSize - bSize;
+
+    return a.id.localeCompare(b.id, "es", { sensitivity: "base" });
+  });
+
+  const itemLines = orderedItems.map((item) => {
+    const hasSize = typeof item.sizeCm === "number";
+    const parts = [item.name];
+
+    if (hasSize) {
+      parts.push(`tam: ${item.sizeCm} cm`);
+      if (item.quantity > 1) {
+        parts.push(`cant: ${item.quantity}`);
+      }
+    }
+
+    return parts.join(" | ");
+  });
 
   const lines = [
     "Hola! Quiero confirmar mi pedido:",
-    ...items.map(
-      (item) => {
-        const unitPrice = item.unitPrice ?? item.price ?? 0;
-        const itemTotal = unitPrice * item.quantity;
-        const sizePart = item.sizeCm ? ` | Tamaño: ${item.sizeCm} cm` : "";
-
-        return `${item.name}${sizePart} | Cantidad: ${
-          item.quantity
-        } | Precio unitario: ${formatCurrency(unitPrice)} | Importe: ${formatCurrency(
-          itemTotal
-        )}`;
-      }
-    ),
-    ...(hasDiscount
-      ? [
-          `Descuento (${discountPercent}%${
-            couponCode ? ` - Cupón ${couponCode}` : ""
-          }): -${formatCurrency(discountAmount)}`,
-          `Total final: ${formatCurrency(total)}`,
-        ]
-      : [`Total final: ${formatCurrency(total)}`]),
-    "Pago por transferencia, coordinamos por WhatsApp.",
+    ...itemLines,
+    "",
+    `Total: ${formatCurrency(total)}`,
     `Alias: ${alias}`,
-    "CBU: 0000003100080790340964",
+    "",
+    `Mandanos tu comprobante para poner en marcha tu pedido${ICON_HEART_HANDS}`,
   ];
 
-  const message = encodeURIComponent(lines.join("\n"));
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+  return lines.join("\n");
+};
+
+export const buildWhatsAppCheckoutPayload = (payload: WhatsAppPayload) => {
+  const message = buildWhatsAppCheckoutMessage(payload);
+
+  const url = new URL("https://api.whatsapp.com/send");
+  url.searchParams.set("phone", WHATSAPP_NUMBER);
+  url.searchParams.set("text", message);
+
+  return {
+    url: url.toString(),
+    message,
+  };
+};
+
+export const buildWhatsAppCheckoutUrl = (payload: WhatsAppPayload) => {
+  return buildWhatsAppCheckoutPayload(payload).url;
 };

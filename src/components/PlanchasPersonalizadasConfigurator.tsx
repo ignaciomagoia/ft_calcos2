@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { createOrderIntent } from "@/lib/orders";
 
 const WA_NUMBER = "3516183951";
 
@@ -70,6 +71,8 @@ const PlanchasPersonalizadasConfigurator = () => {
   const [sheetType, setSheetType] = useState<SheetTypeId>("con_laca");
   const [sheetSize, setSheetSize] = useState<SheetSizeId>("s45x15");
   const [quantity, setQuantity] = useState<SheetQuantity>(20);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [activeSlide, setActiveSlide] = useState(0);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const slideRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -133,7 +136,10 @@ const PlanchasPersonalizadasConfigurator = () => {
     }
   };
 
-  const handleOpenWhatsapp = () => {
+  const handleOpenWhatsapp = async () => {
+    setSubmitError("");
+    setIsSubmitting(true);
+
     const message = [
       "Pedido - Planchas personalizadas 🧾",
       "",
@@ -141,6 +147,7 @@ const PlanchasPersonalizadasConfigurator = () => {
       `Tamaño: ${selectedSize.waLabel}`,
       `Cantidad: ${quantity}`,
       `Total: ${formatArs(total)}`,
+      "Alias: efete.calcos",
       "",
       "Importante: falta que te envíe la foto/diseño que quiero ✅",
     ].join("\n");
@@ -148,7 +155,38 @@ const PlanchasPersonalizadasConfigurator = () => {
     const url = new URL("https://api.whatsapp.com/send");
     url.searchParams.set("phone", WA_NUMBER);
     url.searchParams.set("text", message);
-    window.open(url.toString(), "_blank", "noopener,noreferrer");
+
+    try {
+      await createOrderIntent({
+        summary: `Planchas: ${selectedType.label} | ${selectedSize.waLabel} | ${quantity}u`,
+        total,
+        whatsappMessage: message,
+        source: "web",
+        orderDetails: {
+          flow: "planchas_personalizadas",
+          items: [
+            {
+              name: "Plancha personalizada",
+              type: selectedType.label,
+              size: selectedSize.waLabel,
+              quantity,
+              unitPrice: Math.round(unitPrice),
+              lineTotal: total,
+            },
+          ],
+        },
+      });
+
+      window.open(url.toString(), "_blank", "noopener,noreferrer");
+    } catch (submitError: unknown) {
+      setSubmitError(
+        submitError instanceof Error
+          ? submitError.message
+          : "No se pudo guardar el pedido. Reintentá."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -345,9 +383,10 @@ const PlanchasPersonalizadasConfigurator = () => {
               <button
                 type="button"
                 onClick={handleOpenWhatsapp}
+                disabled={isSubmitting}
                 className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)]"
               >
-                Consultar por WhatsApp
+                {isSubmitting ? "Guardando pedido..." : "Consultar por WhatsApp"}
               </button>
               <Link
                 href="/"
@@ -356,6 +395,9 @@ const PlanchasPersonalizadasConfigurator = () => {
                 Volver al inicio
               </Link>
             </div>
+            {submitError ? (
+              <p className="mt-3 text-sm text-rose-600">{submitError}</p>
+            ) : null}
           </div>
         </div>
       </section>

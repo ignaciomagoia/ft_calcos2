@@ -5,12 +5,14 @@ create table if not exists public.categories (
   name text not null,
   slug text unique not null,
   image_url text,
+  description text,
   sort_order int default 0,
   created_at timestamptz default now()
 );
 
 alter table public.categories
-  add column if not exists image_url text;
+  add column if not exists image_url text,
+  add column if not exists description text;
 
 create table if not exists public.products (
   id uuid primary key default uuid_generate_v4(),
@@ -85,6 +87,21 @@ create unique index if not exists coupons_code_upper_trim_idx
   on public.coupons ((upper(btrim(code))));
 create index if not exists coupons_created_idx
   on public.coupons (created_at desc);
+
+create table if not exists public.orders (
+  id uuid primary key default uuid_generate_v4(),
+  summary text not null,
+  total int not null default 0 check (total >= 0),
+  whatsapp_message text not null,
+  order_details jsonb,
+  source text not null default 'web',
+  created_at timestamptz default now()
+);
+
+create index if not exists orders_created_idx
+  on public.orders (created_at desc);
+create index if not exists orders_source_idx
+  on public.orders (source);
 
 create or replace function public.validate_coupon(input_code text)
 returns table (code text, percent int)
