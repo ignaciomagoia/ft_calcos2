@@ -121,7 +121,7 @@ const HeroCarousel = () => {
                       {slide.badge}
                     </span>
                     {index === 0 ? (
-                      <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
+                      <h1 className="text-4xl font-semibold leading-tight tracking-[0.01em] sm:text-6xl">
                         {slide.title}
                       </h1>
                     ) : (
@@ -144,7 +144,7 @@ const HeroCarousel = () => {
                     </Link>
                     <Link
                       href="/cart"
-                      className="inline-flex items-center justify-center rounded-full border border-white/40 px-8 py-3 text-white transition hover:-translate-y-0.5 hover:bg-white/10"
+                      className="inline-flex items-center justify-center rounded-full border border-[var(--color-primary)] bg-[var(--color-primary)] px-8 py-3 text-white transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)]"
                     >
                       Ir al carrito
                     </Link>
@@ -221,11 +221,15 @@ const HeroCarousel = () => {
                   )}
                 </div>
 
-                <div className="w-full max-w-4xl">
+                <div
+                  className={`w-full ${
+                    slide.id === "slide-2" ? "max-w-5xl" : "max-w-4xl"
+                  }`}
+                >
                   <div
                     className={`relative w-full ${
                       slide.id === "slide-2"
-                        ? "shrink-0 -mt-12 h-[290px] sm:-mt-4 sm:h-[320px] lg:-mt-8 lg:h-[380px]"
+                        ? "shrink-0 -mt-12 h-[290px] sm:-mt-4 sm:h-[320px] lg:-mt-24 lg:h-[490px]"
                         : "-mt-2 h-[260px] sm:-mt-4 sm:h-[320px] lg:h-[380px]"
                     }`}
                   >
@@ -234,7 +238,11 @@ const HeroCarousel = () => {
                       alt={slide.imageAlt}
                       fill
                       sizes="(min-width: 1024px) 60vw, 90vw"
-                      className="rounded-[26px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in"
+                      className={`rounded-[26px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in ${
+                        slide.id === "slide-2"
+                          ? "lg:scale-[1.04] lg:-translate-y-10"
+                          : ""
+                      }`}
                     />
                   </div>
                 </div>
