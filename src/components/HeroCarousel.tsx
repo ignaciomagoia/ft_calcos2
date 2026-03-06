@@ -138,13 +138,13 @@ const HeroCarousel = () => {
                     <div className="mt-auto flex flex-col gap-3 text-sm font-semibold sm:flex-row">
                     <Link
                       href="/#categorias"
-                      className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-[var(--color-accent)] px-8 py-3 text-[var(--color-primary)] transition hover:-translate-y-0.5"
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-full border border-[var(--color-primary)] bg-[var(--color-primary)] px-8 py-3 text-white transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)]"
                     >
                       Ver catálogo
                     </Link>
                     <Link
                       href="/cart"
-                      className="inline-flex items-center justify-center rounded-full border border-[var(--color-primary)] bg-[var(--color-primary)] px-8 py-3 text-white transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)]"
+                      className="inline-flex items-center justify-center rounded-full border border-white/40 px-8 py-3 text-white transition hover:-translate-y-0.5 hover:bg-white/10"
                     >
                       Ir al carrito
                     </Link>
@@ -176,7 +176,7 @@ const HeroCarousel = () => {
             ) : (
               <div
                 className={`flex h-full flex-col items-center justify-start bg-[var(--color-secondary)] px-6 py-8 text-white sm:px-10 sm:py-10 ${
-                  slide.id === "slide-2" ? "gap-3 sm:gap-5" : "gap-5"
+                  slide.id === "slide-2" ? "gap-2 sm:gap-5" : "gap-5"
                 }`}
               >
                 <div className="space-y-4 text-center">
@@ -223,27 +223,48 @@ const HeroCarousel = () => {
 
                 <div
                   className={`w-full ${
-                    slide.id === "slide-2" ? "max-w-5xl" : "max-w-4xl"
+                    slide.id === "slide-2"
+                      ? "max-w-5xl flex-1 min-h-[320px] sm:flex-none"
+                      : "max-w-4xl"
                   }`}
                 >
                   <div
                     className={`relative w-full ${
                       slide.id === "slide-2"
-                        ? "shrink-0 -mt-12 h-[290px] sm:-mt-4 sm:h-[320px] lg:-mt-24 lg:h-[490px]"
+                        ? "h-full w-[152%] -ml-[26%] sm:ml-0 sm:w-full sm:-mt-4 sm:h-[320px] lg:-mt-24 lg:h-[490px]"
                         : "-mt-2 h-[260px] sm:-mt-4 sm:h-[320px] lg:h-[380px]"
                     }`}
                   >
-                    <Image
-                      src={slide.image}
-                      alt={slide.imageAlt}
-                      fill
-                      sizes="(min-width: 1024px) 60vw, 90vw"
-                      className={`rounded-[26px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in ${
-                        slide.id === "slide-2"
-                          ? "lg:scale-[1.04] lg:-translate-y-10"
-                          : ""
-                      }`}
-                    />
+                    {slide.id === "slide-2" ? (
+                      <>
+                        <Image
+                          src={slide.image}
+                          alt={slide.imageAlt}
+                          fill
+                          sizes="100vw"
+                          className="rounded-[26px] object-contain object-bottom drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in sm:hidden"
+                          style={{
+                            transform: "translateY(24px) scale(1.58)",
+                            transformOrigin: "bottom center",
+                          }}
+                        />
+                        <Image
+                          src={slide.image}
+                          alt={slide.imageAlt}
+                          fill
+                          sizes="(min-width: 640px) 90vw, (min-width: 1024px) 60vw"
+                          className="hidden rounded-[26px] object-contain object-bottom drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in sm:block lg:scale-[1.04] lg:-translate-y-10"
+                        />
+                      </>
+                    ) : (
+                      <Image
+                        src={slide.image}
+                        alt={slide.imageAlt}
+                        fill
+                        sizes="(min-width: 1024px) 60vw, 90vw"
+                        className="rounded-[26px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -323,4 +344,3 @@ const ArrowIcon = ({ direction }: { direction: "left" | "right" }) => (
 );
 
 export default HeroCarousel;
-
