@@ -244,7 +244,7 @@ const HeroCarousel = () => {
                           sizes="100vw"
                           className="rounded-[26px] object-contain object-bottom drop-shadow-[0_20px_50px_rgba(0,0,0,0.28)] animate-hero-in sm:hidden"
                           style={{
-                            transform: "translateY(0px) scale(1.36)",
+                            transform: "translateX(40px) translateY(0px) scale(1.36)",
                             transformOrigin: "bottom center",
                           }}
                         />
