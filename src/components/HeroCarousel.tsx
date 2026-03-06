@@ -137,7 +137,7 @@ const HeroCarousel = () => {
                   {slide.showCtas && (
                     <div className="mt-auto flex flex-col gap-3 text-sm font-semibold sm:flex-row">
                     <Link
-                      href="#catalogo"
+                      href="/#categorias"
                       className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-[var(--color-accent)] px-8 py-3 text-[var(--color-primary)] transition hover:-translate-y-0.5"
                     >
                       Ver catálogo

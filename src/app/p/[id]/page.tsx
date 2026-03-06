@@ -20,7 +20,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${product.name} | EFETE Calcos`,
+    title: product.name,
     description: `Comprá ${product.name} en EFETE Calcos`,
   };
 }

@@ -455,6 +455,7 @@ export const AdminDashboard = ({
             price_8: sharedPricing.price_8,
             category_id: bulkCategoryId,
             image_url: data.publicUrl,
+            active: true,
           };
 
           const { data: created, error: insertError } = await supabase
@@ -795,7 +796,11 @@ export const AdminDashboard = ({
           .eq("id", productForm.id)
           .select("*")
           .single()
-      : supabase.from("products").insert(payload).select("*").single();
+      : supabase
+          .from("products")
+          .insert({ ...payload, active: true })
+          .select("*")
+          .single();
 
     const { data, error } = await query;
 

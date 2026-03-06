@@ -18,15 +18,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://efete-calcos.vercel.app"),
   title: {
-    default: "EFETE Calcos",
-    template: "%s | EFETE Calcos",
+    default: "ft calcos",
+    template: "%s | ft calcos",
   },
   description:
     "E-commerce minimalista para gestionar el catálogo de calcos EFETE: categorías, carrito y checkout por WhatsApp.",
   icons: {
-    icon: "/icon.png?v=2",
-    shortcut: "/icon.png?v=2",
-    apple: "/apple-icon.png?v=2",
+    icon: "/icon.png?v=5",
+    shortcut: "/icon.png?v=5",
+    apple: "/apple-icon.png?v=5",
   },
 };
 

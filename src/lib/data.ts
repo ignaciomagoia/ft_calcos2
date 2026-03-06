@@ -23,6 +23,34 @@ const orderSubcategories = (query: any) =>
   );
 
 const isMissingTableError = (error: any) => error?.code === "42P01";
+const PRODUCTS_PAGE_SIZE = 1000;
+
+const fetchAllProducts = async (
+  buildQuery: () => any
+): Promise<{ data: Product[]; error: any }> => {
+  const allProducts: Product[] = [];
+  let from = 0;
+
+  while (true) {
+    const to = from + PRODUCTS_PAGE_SIZE - 1;
+    const { data, error } = await buildQuery().range(from, to);
+
+    if (error) {
+      return { data: [], error };
+    }
+
+    const currentPage = (data ?? []) as Product[];
+    allProducts.push(...currentPage);
+
+    if (currentPage.length < PRODUCTS_PAGE_SIZE) {
+      break;
+    }
+
+    from += PRODUCTS_PAGE_SIZE;
+  }
+
+  return { data: allProducts, error: null };
+};
 
 export const getCategories = async (): Promise<Category[]> => {
   const supabase = await createSupabaseServerClient();
@@ -60,11 +88,15 @@ export const getProductsByCategoryId = async (
   categoryId: string
 ): Promise<Product[]> => {
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("category_id", categoryId)
-    .order("name", { ascending: true });
+  const { data, error } = await fetchAllProducts(() =>
+    supabase
+      .from("products")
+      .select("*")
+      .eq("category_id", categoryId)
+      .eq("active", true)
+      .order("name", { ascending: true })
+      .order("id", { ascending: true })
+  );
 
   if (error) {
     console.error("Error fetching products", error);
@@ -194,10 +226,13 @@ export const getAdminLists = async (): Promise<AdminLists> => {
 
   const [categoriesResult, productsResult] = await Promise.all([
     orderCategories(supabase.from("categories").select("*")),
-    supabase
-      .from("products")
-      .select("*")
-      .order("name", { ascending: true }),
+    fetchAllProducts(() =>
+      supabase
+        .from("products")
+        .select("*")
+        .order("name", { ascending: true })
+        .order("id", { ascending: true })
+    ),
   ]);
 
   if (categoriesResult.error) {

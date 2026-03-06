@@ -37,7 +37,7 @@ const fakePersonalizadasMayorCategory = {
   id: "fake-personalizadas-por-mayor",
   name: "Personalizadas por mayor",
   slug: "personalizadas-por-mayor",
-  image_url: "/personalizadasmarca.png",
+  image_url: "/personalizadaspormayor2.png",
   sort_order: Number.MAX_SAFE_INTEGER,
 };
 
@@ -65,10 +65,10 @@ export default async function HomePage() {
     <div className="space-y-0">
       <HeroCarousel />
 
-      <section id="catalogo" className="w-full bg-white py-8">
+      <section id="categorias" className="scroll-mt-24 w-full bg-white py-8 sm:scroll-mt-28">
         <div className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-2">
-            <p className="pill">Catálogo</p>
+            <p className="pill">CATEGORÍAS</p>
             <h2 className="text-3xl font-semibold">Elegí tu categoría</h2>
             <p className="text-slate-600">
               Elegí entre las opciones que prefieras, envíanos tu pedido por WhatsApp y nosotros nos encargamos de todo lo demás.
@@ -119,4 +119,3 @@ export default async function HomePage() {
     </div>
   );
 }
-
