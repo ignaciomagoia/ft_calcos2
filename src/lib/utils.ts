@@ -59,3 +59,9 @@ export const compareNamesWithTrailingNumber = (
 
   return aName.localeCompare(bName, "es", { sensitivity: "base" });
 };
+
+export const normalizeCustomerName = (value: string) =>
+  value
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);

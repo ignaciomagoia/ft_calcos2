@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { deleteOrder, listOrders, type Order } from "@/lib/orders";
-import { formatCurrency } from "@/lib/utils";
+import { buildImagePlaceholder, formatCurrency } from "@/lib/utils";
 
 const formatDateTime = (isoDate: string) => {
   const parsed = new Date(isoDate);
@@ -12,6 +12,33 @@ const formatDateTime = (isoDate: string) => {
     dateStyle: "short",
     timeStyle: "short",
   }).format(parsed);
+};
+
+const getCustomerNameFromDetails = (details: unknown): string | null => {
+  if (!details || typeof details !== "object") return null;
+
+  const raw = details as {
+    customerName?: unknown;
+    customer_name?: unknown;
+  };
+
+  if (typeof raw.customerName === "string" && raw.customerName.trim().length > 0) {
+    return raw.customerName.trim();
+  }
+
+  if (typeof raw.customer_name === "string" && raw.customer_name.trim().length > 0) {
+    return raw.customer_name.trim();
+  }
+
+  return null;
+};
+
+const getCustomerNameFromWhatsAppMessage = (message: string): string | null => {
+  const match = message.match(/(?:^|\n)Nombre:\s*(.+)/i);
+  if (!match || !match[1]) return null;
+
+  const normalized = match[1].trim();
+  return normalized.length > 0 ? normalized : null;
 };
 
 const buildOrderDetailPreview = (details: unknown): string | null => {
@@ -54,12 +81,55 @@ const buildOrderDetailPreview = (details: unknown): string | null => {
   return lines.join("\n");
 };
 
-const buildDetailsDump = (details: unknown) => {
-  try {
-    return JSON.stringify(details, null, 2);
-  } catch {
-    return String(details ?? "");
+type OrderImagePreviewItem = {
+  key: string;
+  src: string;
+  alt: string;
+};
+
+const buildOrderImagePreview = (
+  details: unknown,
+  maxItems = 8
+): { items: OrderImagePreviewItem[]; extraCount: number } => {
+  if (!details || typeof details !== "object") {
+    return { items: [], extraCount: 0 };
   }
+
+  const raw = details as { items?: unknown };
+  if (!Array.isArray(raw.items) || raw.items.length === 0) {
+    return { items: [], extraCount: 0 };
+  }
+
+  const items = raw.items
+    .slice(0, maxItems)
+    .map((item, index) => {
+      if (!item || typeof item !== "object") return null;
+      const row = item as {
+        name?: unknown;
+        imageUrl?: unknown;
+        image_url?: unknown;
+      };
+
+      const name = typeof row.name === "string" ? row.name.trim() : "Producto";
+      const candidateImage =
+        typeof row.imageUrl === "string" && row.imageUrl.trim().length > 0
+          ? row.imageUrl.trim()
+          : typeof row.image_url === "string" && row.image_url.trim().length > 0
+          ? row.image_url.trim()
+          : buildImagePlaceholder(name);
+
+      return {
+        key: `${name}-${index}`,
+        src: candidateImage,
+        alt: name,
+      };
+    })
+    .filter((value): value is OrderImagePreviewItem => value !== null);
+
+  return {
+    items,
+    extraCount: Math.max(raw.items.length - items.length, 0),
+  };
 };
 
 export const OrdersAdminPanel = () => {
@@ -151,6 +221,11 @@ export const OrdersAdminPanel = () => {
         <ul className="mt-4 space-y-4">
           {sortedOrders.map((order) => {
             const detailPreview = buildOrderDetailPreview(order.order_details);
+            const customerName =
+              getCustomerNameFromDetails(order.order_details) ??
+              getCustomerNameFromWhatsAppMessage(order.whatsapp_message);
+            const imagePreview = buildOrderImagePreview(order.order_details);
+
             return (
               <li
                 key={order.id}
@@ -164,6 +239,14 @@ export const OrdersAdminPanel = () => {
                     <p className="mt-1 text-sm font-semibold text-slate-900">
                       {order.summary}
                     </p>
+                    {customerName ? (
+                      <p className="mt-1 text-sm text-slate-700">
+                        Cliente:{" "}
+                        <span className="font-semibold text-slate-900">
+                          {customerName}
+                        </span>
+                      </p>
+                    ) : null}
                     <p className="mt-1 text-sm font-medium text-slate-700">
                       Total: {formatCurrency(order.total)}
                     </p>
@@ -178,6 +261,29 @@ export const OrdersAdminPanel = () => {
                   </button>
                 </div>
 
+                {imagePreview.items.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {imagePreview.items.map((item) => (
+                      <div
+                        key={item.key}
+                        className="h-16 w-16 overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+                      >
+                        <img
+                          src={item.src}
+                          alt={item.alt}
+                          className="h-full w-full object-contain p-1"
+                          loading="lazy"
+                        />
+                      </div>
+                    ))}
+                    {imagePreview.extraCount > 0 ? (
+                      <span className="inline-flex h-16 min-w-16 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-600">
+                        +{imagePreview.extraCount}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 {detailPreview ? (
                   <pre className="mt-3 whitespace-pre-wrap rounded-xl bg-slate-50 p-3 text-xs text-slate-700">
                     {detailPreview}
@@ -188,17 +294,11 @@ export const OrdersAdminPanel = () => {
                   <summary className="cursor-pointer text-xs font-semibold text-slate-700">
                     Ver mensaje y detalle completo
                   </summary>
-                  <div className="mt-3 space-y-3 text-xs text-slate-700">
+                  <div className="mt-3 text-xs text-slate-700">
                     <div>
                       <p className="font-semibold text-slate-800">Mensaje WhatsApp</p>
                       <pre className="mt-1 whitespace-pre-wrap rounded-lg bg-white p-2">
                         {order.whatsapp_message}
-                      </pre>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-800">Detalle JSON</p>
-                      <pre className="mt-1 max-h-64 overflow-auto rounded-lg bg-white p-2">
-                        {buildDetailsDump(order.order_details)}
                       </pre>
                     </div>
                   </div>

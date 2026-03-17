@@ -6,17 +6,20 @@ create table if not exists public.categories (
   slug text unique not null,
   image_url text,
   description text,
+  product_layout text not null default 'compact',
   sort_order int default 0,
   created_at timestamptz default now()
 );
 
 alter table public.categories
   add column if not exists image_url text,
-  add column if not exists description text;
+  add column if not exists description text,
+  add column if not exists product_layout text not null default 'compact';
 
 create table if not exists public.products (
   id uuid primary key default uuid_generate_v4(),
   name text not null,
+  description text,
   price int not null,
   price_4 int,
   price_6 int,
@@ -28,6 +31,7 @@ create table if not exists public.products (
 );
 
 alter table public.products
+  add column if not exists description text,
   add column if not exists price_4 int,
   add column if not exists price_6 int,
   add column if not exists price_8 int;

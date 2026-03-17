@@ -20,6 +20,7 @@ type CategoryFormState = {
   name: string;
   image_url: string;
   description: string;
+  product_layout: "compact" | "large";
   file?: File | null;
   sort_order: string;
 };
@@ -37,6 +38,7 @@ type PriceFieldsState = {
 type ProductFormState = PriceFieldsState & {
   id?: string;
   name: string;
+  description: string;
   category_id: string;
   image_url: string;
   file?: File | null;
@@ -48,12 +50,14 @@ const emptyCategoryForm: CategoryFormState = {
   name: "",
   image_url: "",
   description: "",
+  product_layout: "compact",
   file: null,
   sort_order: "0",
 };
 
 const createEmptyProductForm = (categoryId?: string): ProductFormState => ({
   name: "",
+  description: "",
   category_id: categoryId ?? "",
   image_url: "",
   legacy_price: 0,
@@ -661,6 +665,7 @@ export const AdminDashboard = ({
       slug,
       image_url: imageUrl || null,
       description: categoryForm.description.trim() || null,
+      product_layout: categoryForm.product_layout === "large" ? "large" : "compact",
       sort_order: Number(categoryForm.sort_order ?? 0),
     };
 
@@ -697,6 +702,7 @@ export const AdminDashboard = ({
       name: category.name,
       image_url: category.image_url ?? "",
       description: category.description ?? "",
+      product_layout: category.product_layout === "large" ? "large" : "compact",
       file: null,
       sort_order: String(category.sort_order ?? 0),
     });
@@ -785,6 +791,7 @@ export const AdminDashboard = ({
 
     const payload = {
       name: productForm.name,
+      description: productForm.description.trim() || null,
       price: priceTemplate.payload.price,
       price_4: priceTemplate.payload.price_4,
       price_6: priceTemplate.payload.price_6,
@@ -847,6 +854,7 @@ export const AdminDashboard = ({
     setProductForm({
       id: product.id,
       name: product.name,
+      description: product.description ?? "",
       category_id: product.category_id,
       image_url: product.image_url ?? "",
       legacy_price: product.price ?? 0,
@@ -1185,6 +1193,20 @@ export const AdminDashboard = ({
               rows={3}
               className="w-full resize-y rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
             />
+            <select
+              value={categoryForm.product_layout}
+              onChange={(event) =>
+                setCategoryForm((prev) => ({
+                  ...prev,
+                  product_layout:
+                    event.target.value === "large" ? "large" : "compact",
+                }))
+              }
+              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
+            >
+              <option value="compact">Vista normal: 3 mobile / 6 desktop</option>
+              <option value="large">Calcos grandes: 1 por fila (sin abrir modal)</option>
+            </select>
             <input
               type="number"
               placeholder="Orden"
@@ -1263,6 +1285,11 @@ export const AdminDashboard = ({
                     <div className="min-w-0">
                     <p className="font-semibold">{category.name}</p>
                     <p className="text-xs text-slate-400">{category.slug}</p>
+                    <p className="text-xs text-slate-400">
+                      {category.product_layout === "large"
+                        ? "Vista: 1 por fila grande"
+                        : "Vista: 3 mobile / 6 desktop"}
+                    </p>
                     {category.description ? (
                       <p className="mt-1 text-xs text-slate-500">
                         {category.description}
@@ -1319,6 +1346,18 @@ export const AdminDashboard = ({
                 }))
               }
               className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
+            />
+            <textarea
+              rows={2}
+              placeholder="Descripción breve (opcional)"
+              value={productForm.description}
+              onChange={(event) =>
+                setProductForm((prev) => ({
+                  ...prev,
+                  description: event.target.value,
+                }))
+              }
+              className="w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
             />
             <div className="rounded-2xl border border-slate-200 p-3">
               <label className="block text-sm font-semibold text-slate-700">
@@ -1638,7 +1677,7 @@ export const AdminDashboard = ({
             {selectedProductIds.length > 0 ? (
               <p className="text-xs text-slate-500">
                 Este botón usa solo los precios cargados arriba. No modifica nombre ni
-                imagen.
+                imagen ni descripción.
               </p>
             ) : null}
             {productError && (
@@ -1876,7 +1915,14 @@ export const AdminDashboard = ({
                         onChange={() => toggleProductSelection(product.id)}
                         className="h-4 w-4 rounded border-slate-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                       />
-                      <p className="truncate font-semibold">{product.name}</p>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">{product.name}</p>
+                        {product.description ? (
+                          <p className="truncate text-xs text-slate-500">
+                            {product.description}
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
                     <span className="text-slate-500">
                       {formatProductPriceSummary(product)}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createOrderIntent } from "@/lib/orders";
 import { openWhatsAppConversation } from "@/lib/whatsapp";
+import { normalizeCustomerName } from "@/lib/utils";
 
 const WA_NUMBER = "3516183951";
 
@@ -72,6 +73,7 @@ const PlanchasPersonalizadasConfigurator = () => {
   const [sheetType, setSheetType] = useState<SheetTypeId>("con_laca");
   const [sheetSize, setSheetSize] = useState<SheetSizeId>("s45x15");
   const [quantity, setQuantity] = useState<SheetQuantity>(20);
+  const [customerName, setCustomerName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [activeSlide, setActiveSlide] = useState(0);
@@ -94,6 +96,7 @@ const PlanchasPersonalizadasConfigurator = () => {
     [quantity, sheetSize, sheetType]
   );
   const unitPrice = useMemo(() => total / quantity, [quantity, total]);
+  const hasCustomerName = normalizeCustomerName(customerName).length > 0;
 
   const clampSlideIndex = (index: number) =>
     (index + totalSlides) % totalSlides;
@@ -138,12 +141,19 @@ const PlanchasPersonalizadasConfigurator = () => {
   };
 
   const handleOpenWhatsapp = async () => {
+    const normalizedCustomerName = normalizeCustomerName(customerName);
+    if (!normalizedCustomerName) {
+      setSubmitError("Escribí tu nombre para continuar.");
+      return;
+    }
+
     setSubmitError("");
     setIsSubmitting(true);
 
     const message = [
       "Pedido - Planchas personalizadas 🧾",
       "",
+      `Nombre: ${normalizedCustomerName}`,
       `Tipo: ${selectedType.label}`,
       `Tamaño: ${selectedSize.waLabel}`,
       `Cantidad: ${quantity}`,
@@ -155,12 +165,13 @@ const PlanchasPersonalizadasConfigurator = () => {
 
     try {
       await createOrderIntent({
-        summary: `Planchas: ${selectedType.label} | ${selectedSize.waLabel} | ${quantity}u`,
+        summary: `${normalizedCustomerName} - Planchas: ${selectedType.label} | ${selectedSize.waLabel} | ${quantity}u`,
         total,
         whatsappMessage: message,
         source: "web",
         orderDetails: {
           flow: "planchas_personalizadas",
+          customerName: normalizedCustomerName,
           items: [
             {
               name: "Plancha personalizada",
@@ -173,6 +184,7 @@ const PlanchasPersonalizadasConfigurator = () => {
           ],
         },
       });
+      setCustomerName(normalizedCustomerName);
 
       openWhatsAppConversation({ phone: WA_NUMBER, message });
     } catch (submitError: unknown) {
@@ -282,6 +294,26 @@ const PlanchasPersonalizadasConfigurator = () => {
               </h1>
             </div>
 
+            <div className="mt-6 space-y-2">
+              <label
+                htmlFor="customer-name-planchas"
+                className="text-sm font-semibold text-slate-800"
+              >
+                Nombre (obligatorio)
+              </label>
+              <input
+                id="customer-name-planchas"
+                type="text"
+                value={customerName}
+                onChange={(event) => {
+                  setCustomerName(event.target.value);
+                  if (submitError) setSubmitError("");
+                }}
+                placeholder="Ej: Juan Pérez"
+                className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)]"
+              />
+            </div>
+
             <fieldset className="mt-6 space-y-3">
               <legend className="text-sm font-semibold text-slate-800">
                 Tipo de plancha
@@ -380,8 +412,8 @@ const PlanchasPersonalizadasConfigurator = () => {
               <button
                 type="button"
                 onClick={handleOpenWhatsapp}
-                disabled={isSubmitting}
-                className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)]"
+                disabled={isSubmitting || !hasCustomerName}
+                className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting ? "Guardando pedido..." : "Consultar por WhatsApp"}
               </button>

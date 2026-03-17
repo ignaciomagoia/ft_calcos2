@@ -23,6 +23,7 @@ import {
   buildImagePlaceholder,
   compareNamesWithTrailingNumber,
   formatCurrency,
+  normalizeCustomerName,
 } from "@/lib/utils";
 import { createOrderIntent } from "@/lib/orders";
 import {
@@ -67,9 +68,14 @@ export default function CartPage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutFeedback, setCheckoutFeedback] = useState<Feedback | null>(null);
   const [lastOrder, setLastOrder] = useState<LastOrder | null>(null);
+  const [customerName, setCustomerName] = useState("");
 
   useEffect(() => {
-    setLastOrder(getLastOrder());
+    const storedLastOrder = getLastOrder();
+    setLastOrder(storedLastOrder);
+    if (storedLastOrder?.customerName) {
+      setCustomerName(storedLastOrder.customerName);
+    }
   }, []);
 
   useEffect(() => {
@@ -150,6 +156,7 @@ export default function CartPage() {
     () => Math.max(subtotal - discountAmount, 0),
     [subtotal, discountAmount]
   );
+  const hasCustomerName = normalizeCustomerName(customerName).length > 0;
 
   const handleApplyCoupon = async () => {
     const normalizedCode = normalizeCouponCode(couponInput);
@@ -193,23 +200,33 @@ export default function CartPage() {
     setCouponInput("");
   };
 
-  const checkoutPayload = buildWhatsAppCheckoutPayload({
-    items: sortedItems,
-    total: totalWithDiscount,
-    subtotal,
-    discountAmount,
-    discountPercent,
-    couponCode: appliedCoupon?.code ?? null,
-    transferAlias,
-  });
-
   const handleCheckoutWhatsapp = async () => {
     if (items.length === 0) return;
+
+    const normalizedCustomerName = normalizeCustomerName(customerName);
+    if (!normalizedCustomerName) {
+      setCheckoutFeedback({
+        type: "error",
+        message: "Escribí tu nombre para finalizar el pedido.",
+      });
+      return;
+    }
 
     const confirmed = window.confirm(
       "Confirmas que queres enviar el pedido por WhatsApp?"
     );
     if (!confirmed) return;
+
+    const checkoutPayload = buildWhatsAppCheckoutPayload({
+      items: sortedItems,
+      customerName: normalizedCustomerName,
+      total: totalWithDiscount,
+      subtotal,
+      discountAmount,
+      discountPercent,
+      couponCode: appliedCoupon?.code ?? null,
+      transferAlias,
+    });
 
     setIsCheckingOut(true);
 
@@ -219,19 +236,22 @@ export default function CartPage() {
       total: totalWithDiscount,
       timestamp: new Date().toISOString(),
       coupon: appliedCoupon,
+      customerName: normalizedCustomerName,
     };
 
     try {
       await createOrderIntent({
-        summary: buildCartOrderSummary(sortedItems),
+        summary: `${normalizedCustomerName} - ${buildCartOrderSummary(sortedItems)}`,
         total: totalWithDiscount,
         whatsappMessage: checkoutPayload.message,
         source: "web",
         orderDetails: {
+          customerName: normalizedCustomerName,
           items: sortedItems.map((item) => ({
             id: item.id,
             productId: item.productId,
             name: item.name,
+            imageUrl: item.imageUrl ?? null,
             sizeCm: item.sizeCm ?? null,
             quantity: item.quantity,
             unitPrice: getUnitPrice(item),
@@ -252,6 +272,7 @@ export default function CartPage() {
       setAppliedCoupon(null);
       setCouponInput("");
       setCouponFeedback(null);
+      setCustomerName(normalizedCustomerName);
 
       setCheckoutFeedback({
         type: "success",
@@ -290,6 +311,7 @@ export default function CartPage() {
       setCouponInput("");
       setCouponFeedback(null);
     }
+    setCustomerName(lastOrder.customerName ?? "");
 
     setCheckoutFeedback({
       type: "success",
@@ -444,6 +466,29 @@ export default function CartPage() {
                 </p>
               </div>
 
+              <div className="space-y-2 rounded-2xl border border-slate-200 p-3">
+                <label
+                  htmlFor="checkout-customer-name"
+                  className="text-sm font-semibold text-slate-800"
+                >
+                  Nombre (obligatorio)
+                </label>
+                <input
+                  id="checkout-customer-name"
+                  type="text"
+                  value={customerName}
+                  onChange={(event) => {
+                    setCustomerName(event.target.value);
+                    if (checkoutFeedback?.type === "error") {
+                      setCheckoutFeedback(null);
+                    }
+                  }}
+                  placeholder="Ej: Juan Pérez"
+                  disabled={isCheckingOut}
+                  className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:bg-slate-50"
+                />
+              </div>
+
               <CouponPanel
                 couponInput={couponInput}
                 onCouponInputChange={setCouponInput}
@@ -477,7 +522,7 @@ export default function CartPage() {
                 type="button"
                 className="mt-2 inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-white transition hover:bg-[var(--color-primary-dark)] disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={handleCheckoutWhatsapp}
-                disabled={items.length === 0 || isCheckingOut}
+                disabled={items.length === 0 || isCheckingOut || !hasCustomerName}
               >
                 {isCheckingOut ? "Guardando pedido..." : "Finalizar por WhatsApp"}
               </button>
@@ -495,7 +540,7 @@ export default function CartPage() {
               )}
 
               <p className="text-xs text-slate-500">
-                Enviaremos un mensaje con el detalle del pedido, el total y el
+                Enviaremos un mensaje con tu nombre, el detalle del pedido, el total y el
                 texto "Pago por transferencia, coordinamos por WhatsApp".
               </p>
             </aside>

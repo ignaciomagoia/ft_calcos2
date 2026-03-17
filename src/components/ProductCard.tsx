@@ -16,6 +16,7 @@ type Props = {
 
 export const ProductCard = ({ product }: Props) => {
   const image = product.image_url || buildImagePlaceholder(product.name);
+  const productDescription = product.description?.trim() || "";
   const [isOpen, setIsOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -118,6 +119,9 @@ export const ProductCard = ({ product }: Props) => {
               <p className="text-lg font-semibold leading-tight text-slate-900">
                 {product.name}
               </p>
+              {productDescription ? (
+                <p className="text-sm text-slate-500">{productDescription}</p>
+              ) : null}
               {(!hasSizes || unitPrice) && (
                 <p className="text-sm font-medium text-slate-600">
                   {hasSizes

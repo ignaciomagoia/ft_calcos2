@@ -8,6 +8,7 @@ const MOBILE_UA_REGEX =
 
 type WhatsAppPayload = {
   items: CartItem[];
+  customerName: string;
   total: number;
   subtotal?: number;
   discountAmount?: number;
@@ -59,6 +60,7 @@ export const openCheckoutWhatsAppConversation = (message: string) => {
 
 export const buildWhatsAppCheckoutMessage = ({
   items,
+  customerName,
   total,
   subtotal: _subtotal,
   discountAmount: _discountAmount = 0,
@@ -97,6 +99,7 @@ export const buildWhatsAppCheckoutMessage = ({
 
   const lines = [
     "Hola! Quiero confirmar mi pedido:",
+    `Nombre: ${customerName}`,
     ...itemLines,
     "",
     `Total: ${formatCurrency(total)}`,

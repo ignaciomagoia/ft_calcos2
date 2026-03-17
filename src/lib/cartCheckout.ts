@@ -9,6 +9,7 @@ export type LastOrder = {
   total: number;
   timestamp: string;
   coupon: AppliedCoupon | null;
+  customerName?: string;
 };
 
 const isBrowser = () => typeof window !== "undefined";
@@ -57,6 +58,8 @@ export const getLastOrder = (): LastOrder | null => {
       typeof parsed.coupon.percent === "number"
         ? parsed.coupon
         : null;
+    const customerName =
+      typeof parsed.customerName === "string" ? parsed.customerName : undefined;
 
     if (!Number.isFinite(subtotal) || !Number.isFinite(total)) return null;
 
@@ -66,6 +69,7 @@ export const getLastOrder = (): LastOrder | null => {
       total,
       timestamp,
       coupon,
+      customerName,
     };
   } catch {
     return null;

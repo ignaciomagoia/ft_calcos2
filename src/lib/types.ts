@@ -4,6 +4,7 @@ export type Category = {
   slug: string;
   image_url: string | null;
   description?: string | null;
+  product_layout?: "compact" | "large" | null;
   sort_order: number | null;
   created_at?: string | null;
 };
@@ -11,6 +12,7 @@ export type Category = {
 export type Product = {
   id: string;
   name: string;
+  description?: string | null;
   price: number | null;
   price_4?: number | null;
   price_6?: number | null;

@@ -3,14 +3,21 @@
 import { useMemo, useState } from "react";
 import type { Product, ProductSubcategoryLink, Subcategory } from "@/lib/types";
 import { ProductCard } from "./ProductCard";
+import { InlineProductCard } from "./InlineProductCard";
 
 type Props = {
   products: Product[];
   subcategories: Subcategory[];
   links: ProductSubcategoryLink[];
+  displayMode?: "compact" | "large";
 };
 
-export const CategoryProductsGrid = ({ products, subcategories, links }: Props) => {
+export const CategoryProductsGrid = ({
+  products,
+  subcategories,
+  links,
+  displayMode = "compact",
+}: Props) => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [activeSubcategoryId, setActiveSubcategoryId] = useState<string | null>(
     null
@@ -19,7 +26,9 @@ export const CategoryProductsGrid = ({ products, subcategories, links }: Props) 
   const subcategoryNameById = useMemo(
     () =>
       new Map(
-        subcategories.map((subcategory) => [subcategory.id, subcategory.name] as const)
+        subcategories.map(
+          (subcategory) => [subcategory.id, subcategory.name] as const
+        )
       ),
     [subcategories]
   );
@@ -53,6 +62,7 @@ export const CategoryProductsGrid = ({ products, subcategories, links }: Props) 
     : null;
 
   const hasSubcategories = subcategories.length > 0;
+  const isLargeMode = displayMode === "large";
 
   return (
     <div className="space-y-4">
@@ -114,13 +124,22 @@ export const CategoryProductsGrid = ({ products, subcategories, links }: Props) 
             : "No hay productos activos en esta categoría."}
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-6 lg:gap-5">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        <div
+          className={
+            isLargeMode
+              ? "grid grid-cols-1 gap-4 sm:gap-5"
+              : "grid grid-cols-3 gap-3 sm:gap-4 md:grid-cols-6 lg:gap-5"
+          }
+        >
+          {filteredProducts.map((product) =>
+            isLargeMode ? (
+              <InlineProductCard key={product.id} product={product} />
+            ) : (
+              <ProductCard key={product.id} product={product} />
+            )
+          )}
         </div>
       )}
     </div>
   );
 };
-

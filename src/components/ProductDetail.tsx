@@ -35,6 +35,7 @@ export const ProductDetail = ({ product }: Props) => {
   const consultUrl = `https://wa.me/5493516183951?text=${encodeURIComponent(
     `Hola! Quiero consultar por ${product.name}.`
   )}`;
+  const productDescription = product.description?.trim() || "";
 
   useEffect(() => {
     setQuantity(1);
@@ -63,6 +64,9 @@ export const ProductDetail = ({ product }: Props) => {
           <h1 className="text-4xl font-semibold leading-tight">
             {product.name}
           </h1>
+          {productDescription ? (
+            <p className="text-base text-slate-600">{productDescription}</p>
+          ) : null}
           <p className="text-3xl font-semibold text-slate-900">
             {unitPrice
               ? formatCurrency(unitPrice)

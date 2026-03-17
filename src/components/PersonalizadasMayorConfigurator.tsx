@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { createOrderIntent } from "@/lib/orders";
 import { openWhatsAppConversation } from "@/lib/whatsapp";
+import { normalizeCustomerName } from "@/lib/utils";
 
 const WA_NUMBER = "3516183951";
 
@@ -93,6 +94,7 @@ const PersonalizedMayorConfigurator = () => {
   );
   const [stickerSize, setStickerSize] = useState<StickerSizeId>("s4");
   const [quantity, setQuantity] = useState<StickerQuantity>(50);
+  const [customerName, setCustomerName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -104,14 +106,22 @@ const PersonalizedMayorConfigurator = () => {
     [quantity, selectedType.priceGroup, stickerSize]
   );
   const unitPrice = useMemo(() => total / quantity, [quantity, total]);
+  const hasCustomerName = normalizeCustomerName(customerName).length > 0;
 
   const handleOpenWhatsapp = async () => {
+    const normalizedCustomerName = normalizeCustomerName(customerName);
+    if (!normalizedCustomerName) {
+      setSubmitError("Escribí tu nombre para continuar.");
+      return;
+    }
+
     setSubmitError("");
     setIsSubmitting(true);
 
     const message = [
       "Pedido - Personalizadas por mayor 🧾",
       "",
+      `Nombre: ${normalizedCustomerName}`,
       `Tipo: ${selectedType.waLabel}`,
       `Tamaño: ${selectedSize.waLabel}`,
       `Cantidad: ${quantity}`,
@@ -123,12 +133,13 @@ const PersonalizedMayorConfigurator = () => {
 
     try {
       await createOrderIntent({
-        summary: `Mayor: ${selectedType.waLabel} | ${selectedSize.waLabel} | ${quantity}u`,
+        summary: `${normalizedCustomerName} - Mayor: ${selectedType.waLabel} | ${selectedSize.waLabel} | ${quantity}u`,
         total,
         whatsappMessage: message,
         source: "web",
         orderDetails: {
           flow: "personalizadas_por_mayor",
+          customerName: normalizedCustomerName,
           items: [
             {
               name: "Calco personalizado por mayor",
@@ -141,6 +152,7 @@ const PersonalizedMayorConfigurator = () => {
           ],
         },
       });
+      setCustomerName(normalizedCustomerName);
 
       openWhatsAppConversation({ phone: WA_NUMBER, message });
     } catch (submitError: unknown) {
@@ -198,6 +210,26 @@ const PersonalizedMayorConfigurator = () => {
               <p className="text-sm text-slate-600">
                 Cantidad mínima: 50 unidades.
               </p>
+            </div>
+
+            <div className="mt-6 space-y-2">
+              <label
+                htmlFor="customer-name-mayor"
+                className="text-sm font-semibold text-slate-800"
+              >
+                Nombre (obligatorio)
+              </label>
+              <input
+                id="customer-name-mayor"
+                type="text"
+                value={customerName}
+                onChange={(event) => {
+                  setCustomerName(event.target.value);
+                  if (submitError) setSubmitError("");
+                }}
+                placeholder="Ej: Juan Pérez"
+                className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)]"
+              />
             </div>
 
             <fieldset className="mt-6 space-y-3">
@@ -298,8 +330,8 @@ const PersonalizedMayorConfigurator = () => {
               <button
                 type="button"
                 onClick={handleOpenWhatsapp}
-                disabled={isSubmitting}
-                className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)]"
+                disabled={isSubmitting || !hasCustomerName}
+                className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting ? "Guardando pedido..." : "Consultar por WhatsApp"}
               </button>

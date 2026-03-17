@@ -64,6 +64,7 @@ export default async function CategoryPage({ params }: Props) {
           products={products}
           subcategories={subcategoryFilters.subcategories}
           links={subcategoryFilters.links}
+          displayMode={category.product_layout === "large" ? "large" : "compact"}
         />
       </div>
     </div>

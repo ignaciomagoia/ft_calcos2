@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import { createOrderIntent } from "@/lib/orders";
 import { openWhatsAppConversation } from "@/lib/whatsapp";
+import { normalizeCustomerName } from "@/lib/utils";
 
 const WA_NUMBER = "3516183951";
 const ICON_WAVE = String.fromCodePoint(0x1f44b);
@@ -52,6 +53,7 @@ const PersonalizedConfigurator = () => {
   const [background, setBackground] = useState<BackgroundValue | "">("");
   const [vinyl, setVinyl] = useState<VinylValue | "">("");
   const [quantity, setQuantity] = useState(1);
+  const [customerName, setCustomerName] = useState("");
   const [error, setError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +65,7 @@ const PersonalizedConfigurator = () => {
     vinyl && specialVinylsWithMinQty.includes(vinyl)
       ? MIN_QTY_SPECIAL_VINYL
       : 1;
+  const hasCustomerName = normalizeCustomerName(customerName).length > 0;
 
   const clampSlideIndex = (index: number) =>
     (index + totalSlides) % totalSlides;
@@ -119,6 +122,12 @@ const PersonalizedConfigurator = () => {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const normalizedCustomerName = normalizeCustomerName(customerName);
+
+    if (!normalizedCustomerName) {
+      setError("Escribí tu nombre para continuar.");
+      return;
+    }
 
     if (!size || !background || !vinyl || quantity < minQuantity) {
       setError(
@@ -135,6 +144,7 @@ const PersonalizedConfigurator = () => {
 
     const message = [
       `Hola! ${ICON_WAVE} Quiero un calco personalizado.`,
+      `Nombre: ${normalizedCustomerName}`,
       `${ICON_RULER} Tamaño: ${size}`,
       `${ICON_FRAME} Fondo: ${background}`,
       `${ICON_TAG} Vinilo: ${vinyl}`,
@@ -147,12 +157,13 @@ const PersonalizedConfigurator = () => {
 
     try {
       await createOrderIntent({
-        summary: `Personalizado: ${size} | ${vinyl} | ${quantity} unidad(es)`,
+        summary: `${normalizedCustomerName} - Personalizado: ${size} | ${vinyl} | ${quantity} unidad(es)`,
         total: 0,
         whatsappMessage: message,
         source: "web",
         orderDetails: {
           flow: "personalizado",
+          customerName: normalizedCustomerName,
           items: [
             {
               name: "Calco personalizado",
@@ -160,10 +171,12 @@ const PersonalizedConfigurator = () => {
               background,
               vinyl,
               quantity,
-            },
-          ],
-        },
-      });
+              },
+            ],
+          },
+        });
+
+      setCustomerName(normalizedCustomerName);
 
       openWhatsAppConversation({ phone: WA_NUMBER, message });
     } catch (submitError: unknown) {
@@ -277,6 +290,27 @@ const PersonalizedConfigurator = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+              <div className="space-y-3">
+                <label
+                  htmlFor="customerName"
+                  className="text-sm font-semibold text-slate-800"
+                >
+                  Nombre (obligatorio)
+                </label>
+                <input
+                  id="customerName"
+                  type="text"
+                  value={customerName}
+                  onChange={(event) => {
+                    setCustomerName(event.target.value);
+                    if (error) setError("");
+                    if (submitError) setSubmitError("");
+                  }}
+                  placeholder="Ej: Juan Pérez"
+                  className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)]"
+                />
+              </div>
+
               <fieldset className="space-y-3">
                 <legend className="text-sm font-semibold text-slate-800">
                   Tamaño
@@ -412,8 +446,8 @@ const PersonalizedConfigurator = () => {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 !text-white text-sm font-semibold shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                  disabled={isSubmitting || !hasCustomerName}
+                  className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 !text-white text-sm font-semibold shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSubmitting ? "Guardando pedido..." : "Pedir por WhatsApp"}
                 </button>
