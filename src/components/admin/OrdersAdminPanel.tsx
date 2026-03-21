@@ -88,20 +88,18 @@ type OrderImagePreviewItem = {
 };
 
 const buildOrderImagePreview = (
-  details: unknown,
-  maxItems = 8
-): { items: OrderImagePreviewItem[]; extraCount: number } => {
+  details: unknown
+): OrderImagePreviewItem[] => {
   if (!details || typeof details !== "object") {
-    return { items: [], extraCount: 0 };
+    return [];
   }
 
   const raw = details as { items?: unknown };
   if (!Array.isArray(raw.items) || raw.items.length === 0) {
-    return { items: [], extraCount: 0 };
+    return [];
   }
 
   const items = raw.items
-    .slice(0, maxItems)
     .map((item, index) => {
       if (!item || typeof item !== "object") return null;
       const row = item as {
@@ -126,10 +124,7 @@ const buildOrderImagePreview = (
     })
     .filter((value): value is OrderImagePreviewItem => value !== null);
 
-  return {
-    items,
-    extraCount: Math.max(raw.items.length - items.length, 0),
-  };
+  return items;
 };
 
 export const OrdersAdminPanel = () => {
@@ -261,9 +256,9 @@ export const OrdersAdminPanel = () => {
                   </button>
                 </div>
 
-                {imagePreview.items.length > 0 ? (
+                {imagePreview.length > 0 ? (
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {imagePreview.items.map((item) => (
+                    {imagePreview.map((item) => (
                       <div
                         key={item.key}
                         className="h-16 w-16 overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
@@ -276,11 +271,6 @@ export const OrdersAdminPanel = () => {
                         />
                       </div>
                     ))}
-                    {imagePreview.extraCount > 0 ? (
-                      <span className="inline-flex h-16 min-w-16 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-600">
-                        +{imagePreview.extraCount}
-                      </span>
-                    ) : null}
                   </div>
                 ) : null}
 
