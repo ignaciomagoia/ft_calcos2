@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/lib/types";
 import { AddToCartButton } from "./AddToCartButton";
 import { buildImagePlaceholder, formatCurrency } from "@/lib/utils";
+import { buildOptimizedImageUrl } from "@/lib/cloudinaryImage";
 import {
   type ProductSizeCm,
   getLegacyProductPrice,
@@ -21,7 +22,12 @@ export const ProductDetail = ({ product }: Props) => {
   );
   const [selectionError, setSelectionError] = useState("");
 
-  const image = product.image_url || buildImagePlaceholder(product.name);
+  const image =
+    buildOptimizedImageUrl(product.image_url, {
+      width: 1200,
+      height: 1200,
+      crop: "limit",
+    }) || buildImagePlaceholder(product.name);
   const sizeOptions = useMemo(() => getProductSizeOptions(product), [product]);
   const hasSizeOptions = sizeOptions.length > 0;
   const legacyPrice = getLegacyProductPrice(product);

@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { Category, Product } from "@/lib/types";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
+import { buildOptimizedImageUrl } from "@/lib/cloudinaryImage";
 import {
   compareNamesWithTrailingNumber,
   formatCurrency,
@@ -87,6 +88,8 @@ const ALLOWED_PRODUCT_IMAGE_TYPES = [
   "image/webp",
 ];
 const BULK_UPLOAD_CONCURRENCY = 8;
+const CLOUDINARY_PRODUCTS_FOLDER = "ft-calcos/products";
+const CLOUDINARY_CATEGORIES_FOLDER = "ft-calcos/categories";
 
 type BulkUploadStatus =
   | "pending"
@@ -102,6 +105,14 @@ type BulkUploadItem = {
   name: string;
   status: BulkUploadStatus;
   message?: string;
+};
+
+type CloudinaryUploadApiPayload = {
+  url: string;
+};
+
+type DeleteProductResult = {
+  error: string | null;
 };
 
 const getBaseNameFromFile = (fileName: string) => {
@@ -130,6 +141,53 @@ const validateProductImageFile = (file: File | null | undefined): string | null 
   }
 
   return null;
+};
+
+const parseCloudinaryUploadPayload = (
+  payload: unknown
+): CloudinaryUploadApiPayload | null => {
+  if (!payload || typeof payload !== "object") return null;
+
+  const raw = payload as { url?: unknown };
+  if (typeof raw.url !== "string" || raw.url.trim().length === 0) {
+    return null;
+  }
+
+  return {
+    url: raw.url.trim(),
+  };
+};
+
+const uploadImageViaAdminApi = async (file: File, folder: string) => {
+  const formData = new FormData();
+  formData.set("file", file);
+  formData.set("folder", folder);
+
+  const response = await fetch("/api/admin/cloudinary-upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  let payload: unknown = null;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = null;
+  }
+
+  const parsed = parseCloudinaryUploadPayload(payload);
+
+  if (!response.ok || !parsed) {
+    const message =
+      payload &&
+      typeof payload === "object" &&
+      typeof (payload as { error?: unknown }).error === "string"
+        ? (payload as { error: string }).error
+        : "No se pudo subir la imagen a Cloudinary.";
+    throw new Error(message);
+  }
+
+  return parsed.url;
 };
 
 const parseOptionalSizePrice = (
@@ -205,79 +263,6 @@ const getSharedPricePayload = (
     },
     error: null,
   };
-};
-
-const getStoragePathsFromImageValue = (
-  imageValue: string | null | undefined
-): string[] => {
-  if (!imageValue) return [];
-
-  const cleanValue = imageValue.trim();
-  if (!cleanValue) return [];
-
-  const marker = "/storage/v1/object/public/products/";
-  const candidates = new Set<string>();
-  const normalizePath = (path: string) => {
-    const withoutQuery = path.split("?")[0].split("#")[0];
-    const normalized = withoutQuery.replace(/^\/+/, "");
-    if (
-      normalized.startsWith("uploads/") ||
-      normalized.startsWith("categories/")
-    ) {
-      return decodeURIComponent(normalized);
-    }
-    return null;
-  };
-
-  const directPath = normalizePath(cleanValue);
-  if (directPath) candidates.add(directPath);
-
-  try {
-    const parsedUrl = new URL(cleanValue);
-    const markerIndex = parsedUrl.pathname.indexOf(marker);
-    if (markerIndex >= 0) {
-      const fromMarker = normalizePath(
-        parsedUrl.pathname.slice(markerIndex + marker.length)
-      );
-      if (fromMarker) candidates.add(fromMarker);
-    }
-
-    const uploadsIndex = parsedUrl.pathname.indexOf("/uploads/");
-    if (uploadsIndex >= 0) {
-      const uploadsPath = normalizePath(
-        parsedUrl.pathname.slice(uploadsIndex + 1)
-      );
-      if (uploadsPath) candidates.add(uploadsPath);
-    }
-
-    const categoriesIndex = parsedUrl.pathname.indexOf("/categories/");
-    if (categoriesIndex >= 0) {
-      const categoriesPath = normalizePath(
-        parsedUrl.pathname.slice(categoriesIndex + 1)
-      );
-      if (categoriesPath) candidates.add(categoriesPath);
-    }
-  } catch {
-    const markerIndex = cleanValue.indexOf(marker);
-    if (markerIndex >= 0) {
-      const fromMarker = normalizePath(cleanValue.slice(markerIndex + marker.length));
-      if (fromMarker) candidates.add(fromMarker);
-    }
-
-    const uploadsIndex = cleanValue.indexOf("uploads/");
-    if (uploadsIndex >= 0) {
-      const uploadsPath = normalizePath(cleanValue.slice(uploadsIndex));
-      if (uploadsPath) candidates.add(uploadsPath);
-    }
-
-    const categoriesIndex = cleanValue.indexOf("categories/");
-    if (categoriesIndex >= 0) {
-      const categoriesPath = normalizePath(cleanValue.slice(categoriesIndex));
-      if (categoriesPath) candidates.add(categoriesPath);
-    }
-  }
-
-  return Array.from(candidates);
 };
 
 export const AdminDashboard = ({
@@ -433,25 +418,11 @@ export const AdminDashboard = ({
 
         updateBulkItem(item.id, { status: "uploading", message: "Subiendo..." });
 
-        let uploadedPath: string | null = null;
-
         try {
-          const fileExt = item.file.name.split(".").pop() ?? "jpg";
-          uploadedPath = `uploads/${crypto.randomUUID()}.${fileExt}`;
-          const { error: uploadError } = await supabase.storage
-            .from("products")
-            .upload(uploadedPath, item.file, {
-              cacheControl: "3600",
-              upsert: false,
-            });
-
-          if (uploadError) {
-            throw new Error(uploadError.message);
-          }
-
-          const { data } = supabase.storage
-            .from("products")
-            .getPublicUrl(uploadedPath);
+          const imageUrl = await uploadImageViaAdminApi(
+            item.file,
+            CLOUDINARY_PRODUCTS_FOLDER
+          );
 
           const payload = {
             name: item.name,
@@ -460,7 +431,7 @@ export const AdminDashboard = ({
             price_6: sharedPricing.price_6,
             price_8: sharedPricing.price_8,
             category_id: bulkCategoryId,
-            image_url: data.publicUrl,
+            image_url: imageUrl,
             active: true,
           };
 
@@ -477,10 +448,6 @@ export const AdminDashboard = ({
           setProducts((prev) => [created, ...prev]);
           updateBulkItem(item.id, { status: "success", message: "OK" });
         } catch (error: any) {
-          if (uploadedPath) {
-            await supabase.storage.from("products").remove([uploadedPath]);
-          }
-
           updateBulkItem(item.id, {
             status: "error",
             message: error?.message ?? "Error al subir",
@@ -641,23 +608,18 @@ export const AdminDashboard = ({
     let imageUrl = categoryForm.image_url.trim();
 
     if (categoryForm.file) {
-      const fileExt = categoryForm.file.name.split(".").pop() ?? "jpg";
-      const path = `categories/${crypto.randomUUID()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from("products")
-        .upload(path, categoryForm.file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadError) {
-        setCategoryMessage(uploadError.message);
+      try {
+        imageUrl = await uploadImageViaAdminApi(
+          categoryForm.file,
+          CLOUDINARY_CATEGORIES_FOLDER
+        );
+      } catch (error: unknown) {
+        setCategoryMessage(
+          error instanceof Error ? error.message : "No se pudo subir la imagen."
+        );
         setCategoryLoading(false);
         return;
       }
-
-      const { data } = supabase.storage.from("products").getPublicUrl(path);
-      imageUrl = data.publicUrl;
     }
 
     const payload = {
@@ -758,23 +720,19 @@ export const AdminDashboard = ({
     }
 
     if (productForm.file) {
-      const fileExt = productForm.file.name.split(".").pop() ?? "jpg";
-      const path = `uploads/${crypto.randomUUID()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from("products")
-        .upload(path, productForm.file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadError) {
-        setProductError(uploadError.message);
+      let uploadedUrl = "";
+      try {
+        uploadedUrl = await uploadImageViaAdminApi(
+          productForm.file,
+          CLOUDINARY_PRODUCTS_FOLDER
+        );
+      } catch (error: unknown) {
+        setProductError(
+          error instanceof Error ? error.message : "No se pudo subir la imagen."
+        );
         setProductLoading(false);
         return;
       }
-
-      const { data } = supabase.storage.from("products").getPublicUrl(path);
-      const uploadedUrl = data.publicUrl;
       imageUrl = uploadedUrl;
       setProductForm((prev) => ({
         ...prev,
@@ -818,33 +776,12 @@ export const AdminDashboard = ({
     if (error || !data) {
       setProductError(error?.message ?? "Error guardando producto");
     } else {
-      const currentProduct = productForm.id
-        ? products.find((prod) => prod.id === productForm.id)
-        : null;
-      let warning: string | null = null;
-
-      const previousPaths = getStoragePathsFromImageValue(
-        currentProduct?.image_url
-      );
-      const nextPaths = new Set(getStoragePathsFromImageValue(imageUrl));
-      const pathsToRemove = previousPaths.filter((path) => !nextPaths.has(path));
-
-      if (pathsToRemove.length > 0) {
-        const { error: oldImageError } = await supabase.storage
-          .from("products")
-          .remove(pathsToRemove);
-        if (oldImageError) {
-          warning =
-            "Producto guardado. No se pudo borrar la imagen anterior del storage.";
-        }
-      }
-
       setProducts((prev) => {
         const filtered = prev.filter((prod) => prod.id !== data.id);
         return [data, ...filtered];
       });
       setProductForm(createEmptyProductForm(productForm.category_id));
-      setProductMessage(warning ?? "Producto guardado.");
+      setProductMessage("Producto guardado.");
     }
 
     setProductLoading(false);
@@ -878,20 +815,7 @@ export const AdminDashboard = ({
     setProductMessage(null);
   };
 
-  const deleteProductRecord = async (product: Product) => {
-    let warning: string | null = null;
-    const storagePaths = getStoragePathsFromImageValue(product.image_url);
-
-    if (storagePaths.length > 0) {
-      const { error: storageError } = await supabase.storage
-        .from("products")
-        .remove(storagePaths);
-      if (storageError) {
-        warning =
-          "No se pudo borrar la imagen del storage, pero el producto se eliminó igual.";
-      }
-    }
-
+  const deleteProductRecord = async (product: Product): Promise<DeleteProductResult> => {
     const { error } = await supabase
       .from("products")
       .delete()
@@ -899,20 +823,19 @@ export const AdminDashboard = ({
 
     return {
       error: error?.message ?? null,
-      warning,
     };
   };
 
   const handleDeleteProduct = async (product: Product) => {
     if (!window.confirm("¿Eliminar el producto?")) return;
     setProductError(null);
-    const { error, warning } = await deleteProductRecord(product);
+    const { error } = await deleteProductRecord(product);
 
     if (error) {
       setProductError(error);
     } else {
       setProducts((prev) => prev.filter((prod) => prod.id !== product.id));
-      setProductMessage(warning ?? "Producto eliminado.");
+      setProductMessage("Producto eliminado.");
     }
   };
 
@@ -954,17 +877,15 @@ export const AdminDashboard = ({
     setProductMessage(null);
 
     const deletedIds: string[] = [];
-    const warnings: string[] = [];
     const failedIds: string[] = [];
 
     for (const product of selectedProducts) {
-      const { error, warning } = await deleteProductRecord(product);
+      const { error } = await deleteProductRecord(product);
 
       if (error) {
         failedIds.push(product.id);
       } else {
         deletedIds.push(product.id);
-        if (warning) warnings.push(product.id);
       }
     }
 
@@ -981,11 +902,7 @@ export const AdminDashboard = ({
     }
 
     if (deletedIds.length > 0) {
-      const warningMessage =
-        warnings.length > 0
-          ? " Algunas imágenes no se pudieron borrar del storage."
-          : "";
-      setProductMessage(`${deletedIds.length} producto(s) eliminado(s).${warningMessage}`);
+      setProductMessage(`${deletedIds.length} producto(s) eliminado(s).`);
     }
   };
 
@@ -1272,7 +1189,13 @@ export const AdminDashboard = ({
                   <div className="flex min-w-0 items-center gap-3">
                     {category.image_url ? (
                       <img
-                        src={category.image_url}
+                        src={
+                          buildOptimizedImageUrl(category.image_url, {
+                            width: 120,
+                            height: 120,
+                            crop: "fill",
+                          }) ?? category.image_url
+                        }
                         alt={category.name}
                         className="h-10 w-10 rounded-xl object-cover"
                         loading="lazy"

@@ -3,9 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CategoryProductsGrid } from "@/components/CategoryProductsGrid";
 import {
+  getCatalogProductsPage,
   getCategoryBySlug,
   getCategorySubcategoryFilters,
-  getProductsByCategoryId,
 } from "@/lib/data";
 
 type Props = {
@@ -33,9 +33,13 @@ export default async function CategoryPage({ params }: Props) {
     notFound();
   }
 
-  const [products, subcategoryFilters] = await Promise.all([
-    getProductsByCategoryId(category.id),
-    getCategorySubcategoryFilters(category.id),
+  const [productsPage, subcategoryFilters] = await Promise.all([
+    getCatalogProductsPage({
+      categoryId: category.id,
+      page: 1,
+      pageSize: 24,
+    }),
+    getCategorySubcategoryFilters(category.id, { includeLinks: false }),
   ]);
 
   const categoryDescription =
@@ -61,9 +65,12 @@ export default async function CategoryPage({ params }: Props) {
         </header>
 
         <CategoryProductsGrid
-          products={products}
+          categoryId={category.id}
+          initialProducts={productsPage.items}
+          initialTotal={productsPage.total}
+          initialHasMore={productsPage.hasMore}
+          pageSize={productsPage.pageSize}
           subcategories={subcategoryFilters.subcategories}
-          links={subcategoryFilters.links}
           displayMode={category.product_layout === "large" ? "large" : "compact"}
         />
       </div>

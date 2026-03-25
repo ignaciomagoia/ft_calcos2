@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/lib/types";
 import { AddToCartButton } from "./AddToCartButton";
 import { buildImagePlaceholder, formatCurrency } from "@/lib/utils";
+import { buildOptimizedImageUrl } from "@/lib/cloudinaryImage";
 import {
   type ProductSizeCm,
   getLegacyProductPrice,
@@ -15,7 +16,12 @@ type Props = {
 };
 
 export const InlineProductCard = ({ product }: Props) => {
-  const image = product.image_url || buildImagePlaceholder(product.name);
+  const image =
+    buildOptimizedImageUrl(product.image_url, {
+      width: 900,
+      height: 900,
+      crop: "limit",
+    }) || buildImagePlaceholder(product.name);
   const description = product.description?.trim() || "";
   const [quantity, setQuantity] = useState(1);
   const [selectedSizeCm, setSelectedSizeCm] = useState<ProductSizeCm | null>(

@@ -25,6 +25,7 @@ import {
   formatCurrency,
   normalizeCustomerName,
 } from "@/lib/utils";
+import { buildOptimizedImageUrl } from "@/lib/cloudinaryImage";
 import { createOrderIntent } from "@/lib/orders";
 import {
   buildWhatsAppCheckoutPayload,
@@ -373,9 +374,16 @@ export default function CartPage() {
                 >
                   <div className="flex h-28 w-full items-center justify-center rounded-2xl bg-slate-100 sm:h-24 sm:w-24">
                     <img
-                      src={item.imageUrl || buildImagePlaceholder(item.name)}
+                      src={
+                        buildOptimizedImageUrl(item.imageUrl, {
+                          width: 220,
+                          height: 220,
+                          crop: "limit",
+                        }) || buildImagePlaceholder(item.name)
+                      }
                       alt={item.name}
                       className="h-full w-full max-h-24 object-contain p-2"
+                      loading="lazy"
                     />
                   </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/lib/types";
 import { AddToCartButton } from "./AddToCartButton";
 import { buildImagePlaceholder, formatCurrency } from "@/lib/utils";
+import { buildOptimizedImageUrl } from "@/lib/cloudinaryImage";
 import {
   type ProductSizeCm,
   getLegacyProductPrice,
@@ -15,7 +16,18 @@ type Props = {
 };
 
 export const ProductCard = ({ product }: Props) => {
-  const image = product.image_url || buildImagePlaceholder(product.name);
+  const image =
+    buildOptimizedImageUrl(product.image_url, {
+      width: 460,
+      height: 460,
+      crop: "limit",
+    }) || buildImagePlaceholder(product.name);
+  const modalImage =
+    buildOptimizedImageUrl(product.image_url, {
+      width: 900,
+      height: 900,
+      crop: "limit",
+    }) || image;
   const productDescription = product.description?.trim() || "";
   const [isOpen, setIsOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -109,7 +121,7 @@ export const ProductCard = ({ product }: Props) => {
 
             <div className="mx-auto mb-3 flex w-full max-w-[180px] items-center justify-center">
               <img
-                src={image}
+                src={modalImage}
                 alt={product.name}
                 className="h-auto w-full object-contain drop-shadow-[0_8px_12px_rgba(15,23,42,0.28)]"
               />

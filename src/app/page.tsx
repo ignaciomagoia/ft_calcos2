@@ -6,6 +6,7 @@ import HowToPersonalized from "@/components/HowToPersonalized";
 import SizesSection from "@/components/SizesSection";
 import PremiumQualitySection from "@/components/PremiumQualitySection";
 import HeroCarousel from "@/components/HeroCarousel";
+import { buildOptimizedImageUrl } from "@/lib/cloudinaryImage";
 
 export const dynamic = "force-dynamic";
 
@@ -90,7 +91,13 @@ export default async function HomePage() {
                 <div className="relative flex min-h-0 flex-1 items-center justify-center">
                   {category.image_url ? (
                     <img
-                      src={category.image_url}
+                      src={
+                        buildOptimizedImageUrl(category.image_url, {
+                          width: 520,
+                          height: 520,
+                          crop: "limit",
+                        }) ?? category.image_url
+                      }
                       alt={category.name}
                       className="h-full w-full object-contain object-center transition duration-300 group-hover:scale-[1.03]"
                       loading="lazy"

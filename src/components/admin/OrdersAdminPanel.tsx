@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { deleteOrder, listOrders, type Order } from "@/lib/orders";
 import { buildImagePlaceholder, formatCurrency } from "@/lib/utils";
+import { buildOptimizedImageUrl } from "@/lib/cloudinaryImage";
 
 const formatDateTime = (isoDate: string) => {
   const parsed = new Date(isoDate);
@@ -115,10 +116,16 @@ const buildOrderImagePreview = (
           : typeof row.image_url === "string" && row.image_url.trim().length > 0
           ? row.image_url.trim()
           : buildImagePlaceholder(name);
+      const optimizedImage =
+        buildOptimizedImageUrl(candidateImage, {
+          width: 160,
+          height: 160,
+          crop: "limit",
+        }) ?? candidateImage;
 
       return {
         key: `${name}-${index}`,
-        src: candidateImage,
+        src: optimizedImage,
         alt: name,
       };
     })
