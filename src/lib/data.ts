@@ -23,6 +23,11 @@ const orderSubcategories = (query: any) =>
   );
 
 const isMissingTableError = (error: any) => error?.code === "42P01";
+const isMissingColumnError = (error: any, columnName: string) =>
+  error?.code === "42703" &&
+  String(error?.message ?? "")
+    .toLowerCase()
+    .includes(columnName.toLowerCase());
 const PRODUCTS_PAGE_SIZE = 1000;
 const PUBLIC_PRODUCTS_DEFAULT_PAGE_SIZE = 24;
 const PUBLIC_PRODUCTS_MAX_PAGE_SIZE = 30;
@@ -63,6 +68,21 @@ const fetchAllRows = async <T extends Record<string, unknown>>(
   return { data: allRows, error: null };
 };
 
+const applyProductSortOrder = (query: any, withSortNumber = true) => {
+  let sortableQuery = query;
+
+  if (withSortNumber) {
+    sortableQuery = sortableQuery.order("sort_number", {
+      ascending: true,
+      nullsFirst: false,
+    });
+  }
+
+  return sortableQuery
+    .order("name", { ascending: true })
+    .order("id", { ascending: true });
+};
+
 export const getCategories = async (): Promise<Category[]> => {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await orderCategories(
@@ -99,15 +119,23 @@ export const getProductsByCategoryId = async (
   categoryId: string
 ): Promise<Product[]> => {
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await fetchAllRows<Product>(() =>
-    supabase
-      .from("products")
-      .select("*")
-      .eq("category_id", categoryId)
-      .eq("active", true)
-      .order("name", { ascending: true })
-      .order("id", { ascending: true })
-  );
+  const buildBaseQuery = (withSortNumber: boolean) =>
+    applyProductSortOrder(
+      supabase
+        .from("products")
+        .select("*")
+        .eq("category_id", categoryId)
+        .eq("active", true),
+      withSortNumber
+    );
+
+  let { data, error } = await fetchAllRows<Product>(() => buildBaseQuery(true));
+
+  if (error && isMissingColumnError(error, "sort_number")) {
+    const fallback = await fetchAllRows<Product>(() => buildBaseQuery(false));
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) {
     console.error("Error fetching products", error);
@@ -145,21 +173,6 @@ const getCatalogProductsSelectColumns = (withSubcategoryJoin: boolean) => {
   return baseColumns;
 };
 
-const getCatalogProductsSortColumns = (withSubcategoryJoin: boolean) => {
-  const baseColumns = "id, name";
-
-  if (withSubcategoryJoin) {
-    return `${baseColumns}, product_subcategories!inner(subcategory_id)`;
-  }
-
-  return baseColumns;
-};
-
-type CatalogProductSortRow = {
-  id: string;
-  name: string;
-};
-
 export const getCatalogProductsPage = async ({
   categoryId,
   subcategoryId = null,
@@ -170,6 +183,7 @@ export const getCatalogProductsPage = async ({
   const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
   const safePageSize = clampPublicProductsPageSize(pageSize);
   const from = (safePage - 1) * safePageSize;
+  const to = from + safePageSize - 1;
   const normalizedSubcategoryId =
     typeof subcategoryId === "string" && subcategoryId.trim().length > 0
       ? subcategoryId.trim()
@@ -177,26 +191,36 @@ export const getCatalogProductsPage = async ({
 
   const withSubcategoryJoin = Boolean(normalizedSubcategoryId);
 
-  const { data: sortRowsRaw, error: sortRowsError } = await fetchAllRows<any>(() => {
-    let sortQuery: any = supabase
+  const runQuery = async (withSortNumber: boolean) => {
+    let query: any = supabase
       .from("products")
-      .select(getCatalogProductsSortColumns(withSubcategoryJoin))
+      .select(getCatalogProductsSelectColumns(withSubcategoryJoin), {
+        count: "exact",
+      })
       .eq("category_id", categoryId)
-      .eq("active", true)
-      .order("id", { ascending: true });
+      .eq("active", true);
 
     if (normalizedSubcategoryId) {
-      sortQuery = sortQuery.eq(
+      query = query.eq(
         "product_subcategories.subcategory_id",
         normalizedSubcategoryId
       );
     }
 
-    return sortQuery;
-  });
+    return applyProductSortOrder(query, withSortNumber).range(from, to);
+  };
 
-  if (sortRowsError) {
-    console.error("Error fetching catalog sort rows", sortRowsError);
+  let { data, error, count } = await runQuery(true);
+
+  if (error && isMissingColumnError(error, "sort_number")) {
+    const fallback = await runQuery(false);
+    data = fallback.data;
+    error = fallback.error;
+    count = fallback.count;
+  }
+
+  if (error) {
+    console.error("Error fetching paginated catalog products", error);
     return {
       items: [],
       total: 0,
@@ -206,94 +230,18 @@ export const getCatalogProductsPage = async ({
     };
   }
 
-  const sortRows = (sortRowsRaw ?? [])
-    .map((row): CatalogProductSortRow | null => {
-      const id = typeof row.id === "string" ? row.id : "";
-      const name = typeof row.name === "string" ? row.name : "";
-      if (!id || !name) return null;
-      return { id, name };
-    })
-    .filter((row): row is CatalogProductSortRow => row !== null)
-    .sort((a, b) => {
-      const byName = compareNamesWithTrailingNumber(a.name, b.name);
-      if (byName !== 0) return byName;
-      return a.id.localeCompare(b.id, "es", { sensitivity: "base" });
-    });
-
-  const orderedIds: string[] = [];
-  const seenIds = new Set<string>();
-  for (const row of sortRows) {
-    if (seenIds.has(row.id)) continue;
-    seenIds.add(row.id);
-    orderedIds.push(row.id);
-  }
-
-  const total = orderedIds.length;
-  if (total === 0) {
-    return {
-      items: [],
-      total: 0,
-      page: safePage,
-      pageSize: safePageSize,
-      hasMore: false,
-    };
-  }
-
-  const pageIds = orderedIds.slice(from, from + safePageSize);
-  if (pageIds.length === 0) {
-    return {
-      items: [],
-      total,
-      page: safePage,
-      pageSize: safePageSize,
-      hasMore: false,
-    };
-  }
-
-  let pageQuery: any = supabase
-    .from("products")
-    .select(getCatalogProductsSelectColumns(withSubcategoryJoin))
-    .eq("category_id", categoryId)
-    .eq("active", true)
-    .in("id", pageIds);
-
-  if (normalizedSubcategoryId) {
-    pageQuery = pageQuery.eq(
-      "product_subcategories.subcategory_id",
-      normalizedSubcategoryId
-    );
-  }
-
-  const { data: pageRows, error: pageRowsError } = await pageQuery;
-
-  if (pageRowsError) {
-    console.error("Error fetching paginated catalog products", pageRowsError);
-    return {
-      items: [],
-      total,
-      page: safePage,
-      pageSize: safePageSize,
-      hasMore: false,
-    };
-  }
-
-  const pageItems = ((pageRows ?? []) as Array<Record<string, unknown>>).map((row) => {
+  const items = ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
     const { product_subcategories: _subcategories, ...product } = row;
     return product as Product;
   });
-  const productsById = new Map<string, Product>(
-    pageItems.map((product) => [product.id, product])
-  );
-  const orderedItems = pageIds
-    .map((id) => productsById.get(id))
-    .filter((product): product is Product => Boolean(product));
+  const total = Number.isFinite(count) ? Number(count) : items.length;
 
   return {
-    items: orderedItems,
+    items,
     total,
     page: safePage,
     pageSize: safePageSize,
-    hasMore: from + orderedItems.length < total,
+    hasMore: from + items.length < total,
   };
 };
 
@@ -421,16 +369,25 @@ export const getSessionProfile = async (): Promise<SessionProfile> => {
 export const getAdminLists = async (): Promise<AdminLists> => {
   const supabase = await createSupabaseServerClient();
 
-  const [categoriesResult, productsResult] = await Promise.all([
-    orderCategories(supabase.from("categories").select("*")),
-    fetchAllRows<Product>(() =>
-      supabase
-        .from("products")
-        .select("*")
-        .order("name", { ascending: true })
-        .order("id", { ascending: true })
-    ),
+  const categoriesPromise = orderCategories(supabase.from("categories").select("*"));
+  const productsPromise = fetchAllRows<Product>(() =>
+    applyProductSortOrder(supabase.from("products").select("*"), true)
+  );
+
+  const [categoriesResult, productsResultRaw] = await Promise.all([
+    categoriesPromise,
+    productsPromise,
   ]);
+
+  let productsResult = productsResultRaw;
+  if (
+    productsResult.error &&
+    isMissingColumnError(productsResult.error, "sort_number")
+  ) {
+    productsResult = await fetchAllRows<Product>(() =>
+      applyProductSortOrder(supabase.from("products").select("*"), false)
+    );
+  }
 
   if (categoriesResult.error) {
     console.error("Error fetching categories for admin", categoriesResult.error);
@@ -442,8 +399,6 @@ export const getAdminLists = async (): Promise<AdminLists> => {
 
   return {
     categories: categoriesResult.data ?? [],
-    products: [...(productsResult.data ?? [])].sort((a, b) =>
-      compareNamesWithTrailingNumber(a.name, b.name)
-    ),
+    products: productsResult.data ?? [],
   };
 };

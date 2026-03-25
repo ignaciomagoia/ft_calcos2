@@ -6,6 +6,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { buildOptimizedImageUrl } from "@/lib/cloudinaryImage";
 import {
   compareNamesWithTrailingNumber,
+  extractTrailingNumber,
   formatCurrency,
   slugify,
 } from "@/lib/utils";
@@ -426,6 +427,7 @@ export const AdminDashboard = ({
 
           const payload = {
             name: item.name,
+            sort_number: extractTrailingNumber(item.name),
             price: sharedPricing.price,
             price_4: sharedPricing.price_4,
             price_6: sharedPricing.price_6,
@@ -749,6 +751,7 @@ export const AdminDashboard = ({
 
     const payload = {
       name: productForm.name,
+      sort_number: extractTrailingNumber(productForm.name),
       description: productForm.description.trim() || null,
       price: priceTemplate.payload.price,
       price_4: priceTemplate.payload.price_4,

@@ -12,6 +12,7 @@ export type Category = {
 export type Product = {
   id: string;
   name: string;
+  sort_number?: number | null;
   description?: string | null;
   price: number | null;
   price_4?: number | null;
