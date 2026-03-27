@@ -23,7 +23,11 @@ import {
   buildImagePlaceholder,
   compareNamesWithTrailingNumber,
   formatCurrency,
+  isValidCustomerEmail,
+  isValidCustomerPhone,
+  normalizeCustomerEmail,
   normalizeCustomerName,
+  normalizeCustomerPhone,
 } from "@/lib/utils";
 import { buildOptimizedImageUrl } from "@/lib/cloudinaryImage";
 import { createOrderIntent } from "@/lib/orders";
@@ -70,12 +74,20 @@ export default function CartPage() {
   const [checkoutFeedback, setCheckoutFeedback] = useState<Feedback | null>(null);
   const [lastOrder, setLastOrder] = useState<LastOrder | null>(null);
   const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
 
   useEffect(() => {
     const storedLastOrder = getLastOrder();
     setLastOrder(storedLastOrder);
     if (storedLastOrder?.customerName) {
       setCustomerName(storedLastOrder.customerName);
+    }
+    if (storedLastOrder?.customerPhone) {
+      setCustomerPhone(storedLastOrder.customerPhone);
+    }
+    if (storedLastOrder?.customerEmail) {
+      setCustomerEmail(storedLastOrder.customerEmail);
     }
   }, []);
 
@@ -158,6 +170,12 @@ export default function CartPage() {
     [subtotal, discountAmount]
   );
   const hasCustomerName = normalizeCustomerName(customerName).length > 0;
+  const hasCustomerPhone = isValidCustomerPhone(
+    normalizeCustomerPhone(customerPhone)
+  );
+  const hasCustomerEmail = isValidCustomerEmail(
+    normalizeCustomerEmail(customerEmail)
+  );
 
   const handleApplyCoupon = async () => {
     const normalizedCode = normalizeCouponCode(couponInput);
@@ -208,7 +226,25 @@ export default function CartPage() {
     if (!normalizedCustomerName) {
       setCheckoutFeedback({
         type: "error",
-        message: "Escribí tu nombre para finalizar el pedido.",
+        message: "Escribi tu nombre para finalizar el pedido.",
+      });
+      return;
+    }
+
+    const normalizedCustomerPhone = normalizeCustomerPhone(customerPhone);
+    if (!isValidCustomerPhone(normalizedCustomerPhone)) {
+      setCheckoutFeedback({
+        type: "error",
+        message: "Escribi un telefono valido para finalizar el pedido.",
+      });
+      return;
+    }
+
+    const normalizedCustomerEmail = normalizeCustomerEmail(customerEmail);
+    if (!isValidCustomerEmail(normalizedCustomerEmail)) {
+      setCheckoutFeedback({
+        type: "error",
+        message: "Escribi un mail valido para finalizar el pedido.",
       });
       return;
     }
@@ -238,6 +274,8 @@ export default function CartPage() {
       timestamp: new Date().toISOString(),
       coupon: appliedCoupon,
       customerName: normalizedCustomerName,
+      customerPhone: normalizedCustomerPhone,
+      customerEmail: normalizedCustomerEmail,
     };
 
     try {
@@ -248,6 +286,8 @@ export default function CartPage() {
         source: "web",
         orderDetails: {
           customerName: normalizedCustomerName,
+          customerPhone: normalizedCustomerPhone,
+          customerEmail: normalizedCustomerEmail,
           items: sortedItems.map((item) => ({
             id: item.id,
             productId: item.productId,
@@ -274,6 +314,8 @@ export default function CartPage() {
       setCouponInput("");
       setCouponFeedback(null);
       setCustomerName(normalizedCustomerName);
+      setCustomerPhone(normalizedCustomerPhone);
+      setCustomerEmail(normalizedCustomerEmail);
 
       setCheckoutFeedback({
         type: "success",
@@ -313,6 +355,8 @@ export default function CartPage() {
       setCouponFeedback(null);
     }
     setCustomerName(lastOrder.customerName ?? "");
+    setCustomerPhone(lastOrder.customerPhone ?? "");
+    setCustomerEmail(lastOrder.customerEmail ?? "");
 
     setCheckoutFeedback({
       type: "success",
@@ -479,7 +523,7 @@ export default function CartPage() {
                   htmlFor="checkout-customer-name"
                   className="text-sm font-semibold text-slate-800"
                 >
-                  Nombre (obligatorio)
+                  Nombre
                 </label>
                 <input
                   id="checkout-customer-name"
@@ -491,7 +535,49 @@ export default function CartPage() {
                       setCheckoutFeedback(null);
                     }
                   }}
-                  placeholder="Ej: Juan Pérez"
+                  placeholder="Ej: Juan Perez"
+                  disabled={isCheckingOut}
+                  className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:bg-slate-50"
+                />
+
+                <label
+                  htmlFor="checkout-customer-phone"
+                  className="text-sm font-semibold text-slate-800"
+                >
+                  Telefono
+                </label>
+                <input
+                  id="checkout-customer-phone"
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(event) => {
+                    setCustomerPhone(event.target.value);
+                    if (checkoutFeedback?.type === "error") {
+                      setCheckoutFeedback(null);
+                    }
+                  }}
+                  placeholder="Ej: 351 1234567"
+                  disabled={isCheckingOut}
+                  className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:bg-slate-50"
+                />
+
+                <label
+                  htmlFor="checkout-customer-email"
+                  className="text-sm font-semibold text-slate-800"
+                >
+                  Mail
+                </label>
+                <input
+                  id="checkout-customer-email"
+                  type="email"
+                  value={customerEmail}
+                  onChange={(event) => {
+                    setCustomerEmail(event.target.value);
+                    if (checkoutFeedback?.type === "error") {
+                      setCheckoutFeedback(null);
+                    }
+                  }}
+                  placeholder="Ej: cliente@mail.com"
                   disabled={isCheckingOut}
                   className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:bg-slate-50"
                 />
@@ -530,7 +616,13 @@ export default function CartPage() {
                 type="button"
                 className="mt-2 inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-white transition hover:bg-[var(--color-primary-dark)] disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={handleCheckoutWhatsapp}
-                disabled={items.length === 0 || isCheckingOut || !hasCustomerName}
+                disabled={
+                  items.length === 0 ||
+                  isCheckingOut ||
+                  !hasCustomerName ||
+                  !hasCustomerPhone ||
+                  !hasCustomerEmail
+                }
               >
                 {isCheckingOut ? "Guardando pedido..." : "Finalizar por WhatsApp"}
               </button>
@@ -549,7 +641,8 @@ export default function CartPage() {
 
               <p className="text-xs text-slate-500">
                 Enviaremos un mensaje con tu nombre, el detalle del pedido, el total y el
-                texto "Pago por transferencia, coordinamos por WhatsApp".
+                texto "Pago por transferencia, coordinamos por WhatsApp". Tu telefono y
+                mail se guardan solo para seguimiento del pedido.
               </p>
             </aside>
           </div>

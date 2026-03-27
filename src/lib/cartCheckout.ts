@@ -10,6 +10,8 @@ export type LastOrder = {
   timestamp: string;
   coupon: AppliedCoupon | null;
   customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
 };
 
 const isBrowser = () => typeof window !== "undefined";
@@ -60,6 +62,10 @@ export const getLastOrder = (): LastOrder | null => {
         : null;
     const customerName =
       typeof parsed.customerName === "string" ? parsed.customerName : undefined;
+    const customerPhone =
+      typeof parsed.customerPhone === "string" ? parsed.customerPhone : undefined;
+    const customerEmail =
+      typeof parsed.customerEmail === "string" ? parsed.customerEmail : undefined;
 
     if (!Number.isFinite(subtotal) || !Number.isFinite(total)) return null;
 
@@ -70,6 +76,8 @@ export const getLastOrder = (): LastOrder | null => {
       timestamp,
       coupon,
       customerName,
+      customerPhone,
+      customerEmail,
     };
   } catch {
     return null;

@@ -65,3 +65,23 @@ export const normalizeCustomerName = (value: string) =>
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 80);
+
+export const normalizeCustomerPhone = (value: string) =>
+  value
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 30);
+
+export const isValidCustomerPhone = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+  return digits.length >= 8;
+};
+
+export const normalizeCustomerEmail = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .slice(0, 120);
+
+export const isValidCustomerEmail = (value: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);

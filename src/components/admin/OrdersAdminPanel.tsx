@@ -34,6 +34,26 @@ const getCustomerNameFromDetails = (details: unknown): string | null => {
   return null;
 };
 
+const getTextFromDetails = (details: unknown, keys: string[]): string | null => {
+  if (!details || typeof details !== "object") return null;
+
+  const raw = details as Record<string, unknown>;
+  for (const key of keys) {
+    const value = raw[key];
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+
+  return null;
+};
+
+const getCustomerPhoneFromDetails = (details: unknown): string | null =>
+  getTextFromDetails(details, ["customerPhone", "customer_phone", "phone", "telefono"]);
+
+const getCustomerEmailFromDetails = (details: unknown): string | null =>
+  getTextFromDetails(details, ["customerEmail", "customer_email", "email", "mail"]);
+
 const getCustomerNameFromWhatsAppMessage = (message: string): string | null => {
   const match = message.match(/(?:^|\n)Nombre:\s*(.+)/i);
   if (!match || !match[1]) return null;
@@ -226,6 +246,8 @@ export const OrdersAdminPanel = () => {
             const customerName =
               getCustomerNameFromDetails(order.order_details) ??
               getCustomerNameFromWhatsAppMessage(order.whatsapp_message);
+            const customerPhone = getCustomerPhoneFromDetails(order.order_details);
+            const customerEmail = getCustomerEmailFromDetails(order.order_details);
             const imagePreview = buildOrderImagePreview(order.order_details);
 
             return (
@@ -246,6 +268,22 @@ export const OrdersAdminPanel = () => {
                         Cliente:{" "}
                         <span className="font-semibold text-slate-900">
                           {customerName}
+                        </span>
+                      </p>
+                    ) : null}
+                    {customerPhone ? (
+                      <p className="mt-1 text-sm text-slate-700">
+                        Telefono:{" "}
+                        <span className="font-semibold text-slate-900">
+                          {customerPhone}
+                        </span>
+                      </p>
+                    ) : null}
+                    {customerEmail ? (
+                      <p className="mt-1 text-sm text-slate-700">
+                        Mail:{" "}
+                        <span className="font-semibold text-slate-900">
+                          {customerEmail}
                         </span>
                       </p>
                     ) : null}

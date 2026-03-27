@@ -5,7 +5,13 @@ import Link from "next/link";
 import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createOrderIntent } from "@/lib/orders";
 import { openWhatsAppConversation } from "@/lib/whatsapp";
-import { normalizeCustomerName } from "@/lib/utils";
+import {
+  isValidCustomerEmail,
+  isValidCustomerPhone,
+  normalizeCustomerEmail,
+  normalizeCustomerName,
+  normalizeCustomerPhone,
+} from "@/lib/utils";
 
 const WA_NUMBER = "3516183951";
 
@@ -74,6 +80,8 @@ const PlanchasPersonalizadasConfigurator = () => {
   const [sheetSize, setSheetSize] = useState<SheetSizeId>("s45x15");
   const [quantity, setQuantity] = useState<SheetQuantity>(20);
   const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [activeSlide, setActiveSlide] = useState(0);
@@ -97,6 +105,12 @@ const PlanchasPersonalizadasConfigurator = () => {
   );
   const unitPrice = useMemo(() => total / quantity, [quantity, total]);
   const hasCustomerName = normalizeCustomerName(customerName).length > 0;
+  const hasCustomerPhone = isValidCustomerPhone(
+    normalizeCustomerPhone(customerPhone)
+  );
+  const hasCustomerEmail = isValidCustomerEmail(
+    normalizeCustomerEmail(customerEmail)
+  );
 
   const clampSlideIndex = (index: number) =>
     (index + totalSlides) % totalSlides;
@@ -142,8 +156,18 @@ const PlanchasPersonalizadasConfigurator = () => {
 
   const handleOpenWhatsapp = async () => {
     const normalizedCustomerName = normalizeCustomerName(customerName);
+    const normalizedCustomerPhone = normalizeCustomerPhone(customerPhone);
+    const normalizedCustomerEmail = normalizeCustomerEmail(customerEmail);
     if (!normalizedCustomerName) {
       setSubmitError("Escribí tu nombre para continuar.");
+      return;
+    }
+    if (!isValidCustomerPhone(normalizedCustomerPhone)) {
+      setSubmitError("Escribí un teléfono válido para continuar.");
+      return;
+    }
+    if (!isValidCustomerEmail(normalizedCustomerEmail)) {
+      setSubmitError("Escribí un mail válido para continuar.");
       return;
     }
 
@@ -172,6 +196,8 @@ const PlanchasPersonalizadasConfigurator = () => {
         orderDetails: {
           flow: "planchas_personalizadas",
           customerName: normalizedCustomerName,
+          customerPhone: normalizedCustomerPhone,
+          customerEmail: normalizedCustomerEmail,
           items: [
             {
               name: "Plancha personalizada",
@@ -185,6 +211,8 @@ const PlanchasPersonalizadasConfigurator = () => {
         },
       });
       setCustomerName(normalizedCustomerName);
+      setCustomerPhone(normalizedCustomerPhone);
+      setCustomerEmail(normalizedCustomerEmail);
 
       openWhatsAppConversation({ phone: WA_NUMBER, message });
     } catch (submitError: unknown) {
@@ -294,26 +322,6 @@ const PlanchasPersonalizadasConfigurator = () => {
               </h1>
             </div>
 
-            <div className="mt-6 space-y-2">
-              <label
-                htmlFor="customer-name-planchas"
-                className="text-sm font-semibold text-slate-800"
-              >
-                Nombre (obligatorio)
-              </label>
-              <input
-                id="customer-name-planchas"
-                type="text"
-                value={customerName}
-                onChange={(event) => {
-                  setCustomerName(event.target.value);
-                  if (submitError) setSubmitError("");
-                }}
-                placeholder="Ej: Juan Pérez"
-                className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)]"
-              />
-            </div>
-
             <fieldset className="mt-6 space-y-3">
               <legend className="text-sm font-semibold text-slate-800">
                 Tipo de plancha
@@ -408,11 +416,55 @@ const PlanchasPersonalizadasConfigurator = () => {
               </div>
             </div>
 
+            <div className="mt-6 space-y-2 rounded-2xl border border-slate-200 p-4">
+              <p className="text-sm font-semibold text-slate-800">
+                Datos de contacto
+              </p>
+              <input
+                id="customer-name-planchas"
+                type="text"
+                value={customerName}
+                onChange={(event) => {
+                  setCustomerName(event.target.value);
+                  if (submitError) setSubmitError("");
+                }}
+                placeholder="Nombre (ej: Juan Perez)"
+                className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)]"
+              />
+              <input
+                id="customer-phone-planchas"
+                type="tel"
+                value={customerPhone}
+                onChange={(event) => {
+                  setCustomerPhone(event.target.value);
+                  if (submitError) setSubmitError("");
+                }}
+                placeholder="Telefono (ej: 351 1234567)"
+                className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)]"
+              />
+              <input
+                id="customer-email-planchas"
+                type="email"
+                value={customerEmail}
+                onChange={(event) => {
+                  setCustomerEmail(event.target.value);
+                  if (submitError) setSubmitError("");
+                }}
+                placeholder="Mail (ej: cliente@mail.com)"
+                className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)]"
+              />
+            </div>
+
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
                 onClick={handleOpenWhatsapp}
-                disabled={isSubmitting || !hasCustomerName}
+                disabled={
+                  isSubmitting ||
+                  !hasCustomerName ||
+                  !hasCustomerPhone ||
+                  !hasCustomerEmail
+                }
                 className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting ? "Guardando pedido..." : "Consultar por WhatsApp"}

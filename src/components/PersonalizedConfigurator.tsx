@@ -5,7 +5,13 @@ import Link from "next/link";
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import { createOrderIntent } from "@/lib/orders";
 import { openWhatsAppConversation } from "@/lib/whatsapp";
-import { normalizeCustomerName } from "@/lib/utils";
+import {
+  isValidCustomerEmail,
+  isValidCustomerPhone,
+  normalizeCustomerEmail,
+  normalizeCustomerName,
+  normalizeCustomerPhone,
+} from "@/lib/utils";
 
 const WA_NUMBER = "3516183951";
 const ICON_WAVE = String.fromCodePoint(0x1f44b);
@@ -54,6 +60,8 @@ const PersonalizedConfigurator = () => {
   const [vinyl, setVinyl] = useState<VinylValue | "">("");
   const [quantity, setQuantity] = useState(1);
   const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [error, setError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,6 +74,12 @@ const PersonalizedConfigurator = () => {
       ? MIN_QTY_SPECIAL_VINYL
       : 1;
   const hasCustomerName = normalizeCustomerName(customerName).length > 0;
+  const hasCustomerPhone = isValidCustomerPhone(
+    normalizeCustomerPhone(customerPhone)
+  );
+  const hasCustomerEmail = isValidCustomerEmail(
+    normalizeCustomerEmail(customerEmail)
+  );
 
   const clampSlideIndex = (index: number) =>
     (index + totalSlides) % totalSlides;
@@ -123,9 +137,19 @@ const PersonalizedConfigurator = () => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const normalizedCustomerName = normalizeCustomerName(customerName);
+    const normalizedCustomerPhone = normalizeCustomerPhone(customerPhone);
+    const normalizedCustomerEmail = normalizeCustomerEmail(customerEmail);
 
     if (!normalizedCustomerName) {
       setError("Escribí tu nombre para continuar.");
+      return;
+    }
+    if (!isValidCustomerPhone(normalizedCustomerPhone)) {
+      setError("Escribí un teléfono válido para continuar.");
+      return;
+    }
+    if (!isValidCustomerEmail(normalizedCustomerEmail)) {
+      setError("Escribí un mail válido para continuar.");
       return;
     }
 
@@ -164,6 +188,8 @@ const PersonalizedConfigurator = () => {
         orderDetails: {
           flow: "personalizado",
           customerName: normalizedCustomerName,
+          customerPhone: normalizedCustomerPhone,
+          customerEmail: normalizedCustomerEmail,
           items: [
             {
               name: "Calco personalizado",
@@ -171,12 +197,14 @@ const PersonalizedConfigurator = () => {
               background,
               vinyl,
               quantity,
-              },
-            ],
-          },
-        });
+            },
+          ],
+        },
+      });
 
       setCustomerName(normalizedCustomerName);
+      setCustomerPhone(normalizedCustomerPhone);
+      setCustomerEmail(normalizedCustomerEmail);
 
       openWhatsAppConversation({ phone: WA_NUMBER, message });
     } catch (submitError: unknown) {
@@ -290,27 +318,6 @@ const PersonalizedConfigurator = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-              <div className="space-y-3">
-                <label
-                  htmlFor="customerName"
-                  className="text-sm font-semibold text-slate-800"
-                >
-                  Nombre (obligatorio)
-                </label>
-                <input
-                  id="customerName"
-                  type="text"
-                  value={customerName}
-                  onChange={(event) => {
-                    setCustomerName(event.target.value);
-                    if (error) setError("");
-                    if (submitError) setSubmitError("");
-                  }}
-                  placeholder="Ej: Juan Pérez"
-                  className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)]"
-                />
-              </div>
-
               <fieldset className="space-y-3">
                 <legend className="text-sm font-semibold text-slate-800">
                   Tamaño
@@ -438,6 +445,48 @@ const PersonalizedConfigurator = () => {
                 </div>
               </div>
 
+              <div className="space-y-3 rounded-2xl border border-slate-200 p-4">
+                <p className="text-sm font-semibold text-slate-800">
+                  Datos de contacto
+                </p>
+                <input
+                  id="customerName"
+                  type="text"
+                  value={customerName}
+                  onChange={(event) => {
+                    setCustomerName(event.target.value);
+                    if (error) setError("");
+                    if (submitError) setSubmitError("");
+                  }}
+                  placeholder="Nombre (ej: Juan Perez)"
+                  className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)]"
+                />
+                <input
+                  id="customerPhone"
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(event) => {
+                    setCustomerPhone(event.target.value);
+                    if (error) setError("");
+                    if (submitError) setSubmitError("");
+                  }}
+                  placeholder="Telefono (ej: 351 1234567)"
+                  className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)]"
+                />
+                <input
+                  id="customerEmail"
+                  type="email"
+                  value={customerEmail}
+                  onChange={(event) => {
+                    setCustomerEmail(event.target.value);
+                    if (error) setError("");
+                    if (submitError) setSubmitError("");
+                  }}
+                  placeholder="Mail (ej: cliente@mail.com)"
+                  className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--color-primary)]"
+                />
+              </div>
+
               {error ? <p className="text-sm text-rose-600">{error}</p> : null}
               {submitError ? (
                 <p className="text-sm text-rose-600">{submitError}</p>
@@ -446,7 +495,12 @@ const PersonalizedConfigurator = () => {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <button
                   type="submit"
-                  disabled={isSubmitting || !hasCustomerName}
+                  disabled={
+                    isSubmitting ||
+                    !hasCustomerName ||
+                    !hasCustomerPhone ||
+                    !hasCustomerEmail
+                  }
                   className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-3 !text-white text-sm font-semibold shadow-lg shadow-[rgba(1,34,161,0.35)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSubmitting ? "Guardando pedido..." : "Pedir por WhatsApp"}
