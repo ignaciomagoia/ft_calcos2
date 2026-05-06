@@ -68,7 +68,7 @@ export const buildWhatsAppCheckoutMessage = ({
   couponCode: _couponCode,
   transferAlias: _transferAlias,
 }: WhatsAppPayload) => {
-  const alias = "efete.calcos";
+  const alias = "juanafaucher.mp";
   const orderedItems = [...items].sort((a, b) => {
     const byName = compareNamesWithTrailingNumber(a.name, b.name);
     if (byName !== 0) return byName;

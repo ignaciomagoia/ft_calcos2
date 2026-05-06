@@ -150,7 +150,7 @@ const PersonalizedMayorConfigurator = () => {
       `Tamaño: ${selectedSize.waLabel}`,
       `Cantidad: ${quantity}`,
       `Total: ${formatArs(total)}`,
-      "Alias: efete.calcos",
+      "Alias: juanafaucher.mp",
       "",
       "Importante: falta que te envíe la foto/diseño del calco que quiero ✅",
     ].join("\n");

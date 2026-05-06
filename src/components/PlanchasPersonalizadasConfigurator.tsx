@@ -182,7 +182,7 @@ const PlanchasPersonalizadasConfigurator = () => {
       `Tamaño: ${selectedSize.waLabel}`,
       `Cantidad: ${quantity}`,
       `Total: ${formatArs(total)}`,
-      "Alias: efete.calcos",
+      "Alias: juanafaucher.mp",
       "",
       "Importante: falta que te envíe la foto/diseño que quiero ✅",
     ].join("\n");
