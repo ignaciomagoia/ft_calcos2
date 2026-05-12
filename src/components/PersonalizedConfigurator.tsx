@@ -173,7 +173,7 @@ const PersonalizedConfigurator = () => {
       `${ICON_FRAME} Fondo: ${background}`,
       `${ICON_TAG} Vinilo: ${vinyl}`,
       `${ICON_NUMBERS} Cantidad: ${quantity}`,
-      "Alias: juanafaucher.mp",
+      "Alias: ft.calcos",
       "",
       `${ICON_CHECK} Me falta enviarte la foto/diseño del calco que quiero (te la mando por acá ahora).`,
       "¿Me confirmás precio y tiempo de entrega?",
