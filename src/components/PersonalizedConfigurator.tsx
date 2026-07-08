@@ -39,6 +39,7 @@ const backgroundOptions = [
 const vinylOptions = [
   { label: "Blanco con laca UV", value: "blanco con laca UV" },
   { label: "Blanco común", value: "blanco común" },
+  { label: "DTF UV", value: "DTF UV" },
   { label: "Holográfico", value: "holográfico" },
   { label: "Dorado", value: "dorado" },
   { label: "Transparente", value: "transparente" },
@@ -49,6 +50,7 @@ type BackgroundValue = (typeof backgroundOptions)[number]["value"];
 type VinylValue = (typeof vinylOptions)[number]["value"];
 const MIN_QTY_SPECIAL_VINYL = 20;
 const specialVinylsWithMinQty: VinylValue[] = [
+  "DTF UV",
   "holográfico",
   "dorado",
   "transparente",
@@ -411,7 +413,8 @@ const PersonalizedConfigurator = () => {
                 </label>
                 {minQuantity > 1 ? (
                   <p className="text-xs text-slate-500">
-                    Para holográfico, dorado o transparente el mínimo es{" "}
+                    Para DTF UV, holográfico, dorado o transparente el mínimo
+                    es{" "}
                     {MIN_QTY_SPECIAL_VINYL} unidades.
                   </p>
                 ) : null}

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createOrderIntent } from "@/lib/orders";
 import { openWhatsAppConversation } from "@/lib/whatsapp";
 import {
@@ -18,48 +18,63 @@ const WA_NUMBER = "3516183951";
 type PriceGroupId = "con_laca_uv" | "sin_laca_transp" | "holograficas_doradas";
 type StickerTypeId =
   | "con_laca_uv_sectorizada"
+  | "dtf_uv"
   | "sin_laca"
   | "transparentes"
   | "holograficas"
   | "doradas";
 type StickerSizeId = "s4" | "s6" | "s8";
-type StickerQuantity = 50 | 100 | 200 | 500 | 1000;
+type StickerQuantity = 20 | 50 | 100 | 200 | 500 | 1000;
+type StickerMinQuantity = 20 | 50;
 
 const TYPE_OPTIONS: Array<{
   id: StickerTypeId;
   label: string;
   waLabel: string;
   priceGroup: PriceGroupId;
+  minQuantity: StickerMinQuantity;
 }> = [
   {
     id: "con_laca_uv_sectorizada",
     label: "Con laca UV sectorizada",
     waLabel: "Con laca UV sectorizada",
     priceGroup: "con_laca_uv",
+    minQuantity: 50,
+  },
+  {
+    id: "dtf_uv",
+    label: "DTF UV",
+    waLabel: "DTF UV",
+    priceGroup: "con_laca_uv",
+    minQuantity: 20,
   },
   {
     id: "sin_laca",
     label: "Sin laca",
     waLabel: "Sin laca",
     priceGroup: "sin_laca_transp",
+    minQuantity: 50,
   },
   {
     id: "transparentes",
     label: "Transparentes",
     waLabel: "Transparentes",
     priceGroup: "sin_laca_transp",
+    minQuantity: 50,
   },
   {
     id: "holograficas",
     label: "Holográficas",
     waLabel: "Holográficas",
     priceGroup: "holograficas_doradas",
+    minQuantity: 50,
   },
   {
     id: "doradas",
     label: "Doradas",
     waLabel: "Doradas",
     priceGroup: "holograficas_doradas",
+    minQuantity: 50,
   },
 ];
 
@@ -69,26 +84,32 @@ const SIZE_OPTIONS: Array<{ id: StickerSizeId; label: string; waLabel: string }>
   { id: "s8", label: "8 cm", waLabel: "8 cm" },
 ];
 
-const QUANTITY_OPTIONS: StickerQuantity[] = [50, 100, 200, 500, 1000];
+const QUANTITY_OPTIONS_BY_MINIMUM: Record<
+  StickerMinQuantity,
+  StickerQuantity[]
+> = {
+  20: [20, 50, 100, 200, 500, 1000],
+  50: [50, 100, 200, 500, 1000],
+};
 
 const PRICE_TABLE: Record<
   PriceGroupId,
   Record<StickerSizeId, Record<StickerQuantity, number>>
 > = {
   con_laca_uv: {
-    s4: { 50: 29250, 100: 55250, 200: 97500, 500: 227500, 1000: 422500 },
-    s6: { 50: 40050, 100: 75650, 200: 133500, 500: 311500, 1000: 578500 },
-    s8: { 50: 58050, 100: 109650, 200: 193500, 500: 451500, 1000: 838500 },
+    s4: { 20: 11700, 50: 29250, 100: 55250, 200: 97500, 500: 227500, 1000: 422500 },
+    s6: { 20: 16020, 50: 40050, 100: 75650, 200: 133500, 500: 311500, 1000: 578500 },
+    s8: { 20: 23220, 50: 58050, 100: 109650, 200: 193500, 500: 451500, 1000: 838500 },
   },
   sin_laca_transp: {
-    s4: { 50: 19000, 100: 35500, 200: 63000, 500: 147500, 1000: 270000 },
-    s6: { 50: 29250, 100: 55000, 200: 98000, 500: 227500, 1000: 420000 },
-    s8: { 50: 40000, 100: 75500, 200: 134000, 500: 318000, 1000: 580000 },
+    s4: { 20: 0, 50: 19000, 100: 35500, 200: 63000, 500: 147500, 1000: 270000 },
+    s6: { 20: 0, 50: 29250, 100: 55000, 200: 98000, 500: 227500, 1000: 420000 },
+    s8: { 20: 0, 50: 40000, 100: 75500, 200: 134000, 500: 318000, 1000: 580000 },
   },
   holograficas_doradas: {
-    s4: { 50: 22500, 100: 42000, 200: 75000, 500: 170000, 1000: 310000 },
-    s6: { 50: 36000, 100: 68000, 200: 122000, 500: 285000, 1000: 530000 },
-    s8: { 50: 57500, 100: 108000, 200: 194000, 500: 450000, 1000: 830000 },
+    s4: { 20: 0, 50: 22500, 100: 42000, 200: 75000, 500: 170000, 1000: 310000 },
+    s6: { 20: 0, 50: 36000, 100: 68000, 200: 122000, 500: 285000, 1000: 530000 },
+    s8: { 20: 0, 50: 57500, 100: 108000, 200: 194000, 500: 450000, 1000: 830000 },
   },
 };
 
@@ -108,6 +129,14 @@ const PersonalizedMayorConfigurator = () => {
 
   const selectedType = TYPE_OPTIONS.find((option) => option.id === stickerType)!;
   const selectedSize = SIZE_OPTIONS.find((option) => option.id === stickerSize)!;
+  const quantityOptions =
+    QUANTITY_OPTIONS_BY_MINIMUM[selectedType.minQuantity];
+
+  useEffect(() => {
+    if (!quantityOptions.includes(quantity)) {
+      setQuantity(quantityOptions[0]);
+    }
+  }, [quantity, quantityOptions]);
 
   const total = useMemo(
     () => PRICE_TABLE[selectedType.priceGroup][stickerSize][quantity],
@@ -236,7 +265,9 @@ const PersonalizedMayorConfigurator = () => {
                 Personalizadas por mayor
               </h1>
               <p className="text-sm text-slate-600">
-                Cantidad mínima: 50 unidades.
+                {selectedType.minQuantity === 20
+                  ? "Cantidad mínima para DTF UV: 20 unidades."
+                  : "Cantidad mínima: 50 unidades."}
               </p>
             </div>
 
@@ -300,8 +331,12 @@ const PersonalizedMayorConfigurator = () => {
               <legend className="text-sm font-semibold text-slate-800">
                 Cantidad
               </legend>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-                {QUANTITY_OPTIONS.map((option) => (
+              <div
+                className={`grid grid-cols-2 gap-2 ${
+                  quantityOptions.length > 5 ? "sm:grid-cols-3 lg:grid-cols-6" : "sm:grid-cols-5"
+                }`}
+              >
+                {quantityOptions.map((option) => (
                   <button
                     key={option}
                     type="button"
