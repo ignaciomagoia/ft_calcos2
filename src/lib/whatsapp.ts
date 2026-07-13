@@ -62,13 +62,13 @@ export const buildWhatsAppCheckoutMessage = ({
   items,
   customerName,
   total,
-  subtotal: _subtotal,
-  discountAmount: _discountAmount = 0,
-  discountPercent: _discountPercent = 0,
-  couponCode: _couponCode,
-  transferAlias: _transferAlias,
+  subtotal,
+  discountAmount = 0,
+  discountPercent = 0,
+  couponCode,
+  transferAlias,
 }: WhatsAppPayload) => {
-  const alias = "ft.calcos";
+  const alias = transferAlias.trim() || "TRANSFER_ALIAS";
   const orderedItems = [...items].sort((a, b) => {
     const byName = compareNamesWithTrailingNumber(a.name, b.name);
     if (byName !== 0) return byName;
@@ -97,12 +97,28 @@ export const buildWhatsAppCheckoutMessage = ({
     return parts.join(" | ");
   });
 
+  const hasCoupon =
+    typeof couponCode === "string" &&
+    couponCode.trim().length > 0 &&
+    discountAmount > 0;
+  const normalizedCouponCode = hasCoupon ? couponCode.trim() : null;
+  const summaryLines = hasCoupon
+    ? [
+        typeof subtotal === "number" ? `Subtotal: ${formatCurrency(subtotal)}` : null,
+        `Cupon usado: ${normalizedCouponCode}`,
+        discountPercent > 0
+          ? `Descuento (${discountPercent}%): -${formatCurrency(discountAmount)}`
+          : `Descuento: -${formatCurrency(discountAmount)}`,
+        `Total final: ${formatCurrency(total)}`,
+      ].filter((line): line is string => Boolean(line))
+    : [`Total: ${formatCurrency(total)}`];
+
   const lines = [
     "Hola! Quiero confirmar mi pedido:",
     `Nombre: ${customerName}`,
     ...itemLines,
     "",
-    `Total: ${formatCurrency(total)}`,
+    ...summaryLines,
     `Alias: ${alias}`,
     "",
     `Mandanos tu comprobante para poner en marcha tu pedido${ICON_HEART_HANDS}`,
