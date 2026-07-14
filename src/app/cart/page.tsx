@@ -37,7 +37,7 @@ import {
 } from "@/lib/whatsapp";
 
 const transferAlias =
-  process.env.NEXT_PUBLIC_TRANSFER_ALIAS ?? "TRANSFER_ALIAS";
+  process.env.NEXT_PUBLIC_TRANSFER_ALIAS ?? "ft.calcos";
 
 type Feedback = {
   type: "success" | "error";
